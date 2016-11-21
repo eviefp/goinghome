@@ -2,11 +2,9 @@
 
 #include "GoingHome.h"
 #include "GoingHomeGameModeBase.h"
-#include "ShipPawn.h"
 
 AGoingHomeGameModeBase::AGoingHomeGameModeBase() : Super()
 {
-	DefaultPawnClass = AShipPawn::StaticClass();
 }
 
 

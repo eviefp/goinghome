@@ -3,3 +3,5 @@
 #include "GoingHome.h"
 
 IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, GoingHome, "GoingHome" );
+
+DEFINE_LOG_CATEGORY(GoingHomeLog);

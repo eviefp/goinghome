@@ -2,9 +2,11 @@
 
 #include "GoingHome.h"
 #include "GoingHomeGameModeBase.h"
+#include "GoingHomeGameState.h"
 
 AGoingHomeGameModeBase::AGoingHomeGameModeBase() : Super()
 {
+	GameStateClass = AGoingHomeGameState::StaticClass();
 }
 
 

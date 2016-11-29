@@ -5,51 +5,54 @@
 
 AGoingHomeGameState::AGoingHomeGameState()
 {
-	CurrentEventIndex = -1;
-	timerSet = false;
+	Initialise();
 }
 
 void AGoingHomeGameState::BeginPlay()
 {
+	// Get the current level name. There should be a similarly named json file in the Data folder for events.
 	auto levelName = GetWorld()->GetName();
 	auto path = FPaths::Combine(FPaths::GameContentDir(), FString("Data/") + levelName + ".json");
 
 	FString jsonString;
-
 	FFileHelper::LoadFileToString(jsonString, *path);
-
 	TSharedPtr<FJsonObject> jsonObject;
-
 	auto reader = TJsonReaderFactory<>::Create(jsonString);
 
-	if(FJsonSerializer::Deserialize(reader, jsonObject))
+	if (FJsonSerializer::Deserialize(reader, jsonObject))
 	{
 		auto events = jsonObject->GetArrayField("events");
-		for(auto& ev : events)
+		for (auto& ev : events)
 		{
 			auto obj = ev->AsObject();
+
+			// There is probably a better way, but I'm scared to create a local variable since I think it will get copy constructed/deleted etc.
 			Events.AddDefaulted(1);
 			auto& storedEvent = Events.Top();
 
 			FString inputString;
 			int32 inputNumber;
 
-			if(obj->TryGetStringField("eventId", inputString))
+			// If the event has no eventId, skip it.
+			if (obj->TryGetStringField("eventId", inputString))
 			{
 				storedEvent.EventId = FName(*inputString);
 			}
 			else
 			{
+				// This is why it's awkward to use AddDefaulted(1), but it's probably not that important unless we have lots of malformed events.
 				UE_LOG(GoingHomeLog, Warning, TEXT("skipping bad event for index %d"), Events.Num());
 				Events.Pop();
 				continue;
 			}
 
-			if(obj->TryGetNumberField("time", inputNumber))
+			// Time can be 0, which will be the default constructed value anyway.
+			if (obj->TryGetNumberField("time", inputNumber))
 			{
 				storedEvent.Time = inputNumber;
 			}
-			
+
+			// Text should generally not be empty, but it's not critical so we only log a warning.
 			if (obj->TryGetStringField("text", inputString))
 			{
 				storedEvent.Text = FText::FromString(inputString);
@@ -60,8 +63,8 @@ void AGoingHomeGameState::BeginPlay()
 				storedEvent.Text = FText::GetEmpty();
 			}
 
-
-			if(obj->TryGetStringField("afterEvent", inputString))
+			// Currently not used.
+			if (obj->TryGetStringField("afterEvent", inputString))
 			{
 				storedEvent.AfterEvent = FName(*inputString);
 			}
@@ -70,17 +73,18 @@ void AGoingHomeGameState::BeginPlay()
 				storedEvent.AfterEvent = "";
 			}
 
-
-			TArray< FString > playerActions;
-			if(obj->TryGetStringArrayField("playerActions", playerActions))
+			// TODO: this should be refactored to be an TArray of object, not string.
+			TArray<FString> playerActions;
+			if (obj->TryGetStringArrayField("playerActions", playerActions))
 			{
-				for(auto& action: playerActions)
+				for (auto& action: playerActions)
 				{
 					storedEvent.PlayerActions.Add(FName(*action));
 				}
 			}
 
-			TArray< FString > playerActionArguments;
+			// TODO: this should get removed when the above is refactored properly. The by index thing is awkward.
+			TArray<FString> playerActionArguments;
 			if (obj->TryGetStringArrayField("playerActionArguments", playerActionArguments))
 			{
 				for (auto& action : playerActionArguments)
@@ -89,40 +93,15 @@ void AGoingHomeGameState::BeginPlay()
 				}
 			}
 		}
-		// Assume first event can't have AfterEvent, so we just schedule it.
-		CurrentEventIndex = -1;
+		// Assume first event can't have AfterEvent, so we just schedule it. Not sure if we need to set CurrentEventIndex here again after the ctor.
+		// Maybe if this object doesn't get destroyed / reconstructed, then it's useful.
+		Initialise();
 		TimerHandler();
 	}
 	else
 	{
+		// Missing or malformed json file.
 		UE_LOG(GoingHomeLog, Error, TEXT("Could not deserialize path %s"), *path);
-	}
-}
-
-void AGoingHomeGameState::TimerHandler()
-{
-	++CurrentEventIndex;
-	timerSet = false;
-
-	UE_LOG(GoingHomeLog, Log, TEXT("CurrentIndex %d"), CurrentEventIndex);
-
-	if(Events.Num() == CurrentEventIndex)
-	{
-		--CurrentEventIndex;
-		return;
-	}
-
-	auto& currentEvent = Events[CurrentEventIndex];
-	DisplayText = currentEvent.Text.ToString();
-
-	if(currentEvent.PlayerActions.Num() == 0 && currentEvent.Time > 0)
-	{
-		UE_LOG(GoingHomeLog, Log, TEXT("Setting timer"));
-		GetWorldTimerManager().SetTimer(EventTimerHandle, this, &AGoingHomeGameState::TimerHandler, currentEvent.Time);
-	}
-	else
-	{
-		UE_LOG(GoingHomeLog, Log, TEXT("Skipping set timer"));
 	}
 }
 
@@ -156,6 +135,7 @@ void AGoingHomeGameState::OnOverlap(FName other)
 
 void AGoingHomeGameState::OnMine(FName other)
 {
+	++MinedAmount;
 	HandleInteractionEvent("mine", other);
 }
 
@@ -166,8 +146,50 @@ void AGoingHomeGameState::OnMineDestroyed(FName other)
 
 void AGoingHomeGameState::OnProjectileHit(AActor const* shooter, AActor const* victim)
 {
-	if(shooter->GetName() == "ShippyMcShipFace")
+	// This should probably be done differnetly.
+	if (shooter->GetName() == "ShippyMcShipFace")
 		HandleInteractionEvent("projectileHit", victim->GetFName());
+}
+
+void AGoingHomeGameState::Initialise()
+{
+	// This will likely be removed if we start replicating? this value.
+	MinedAmount = 0;
+	// We always start by incrementing the current event index, so the first has to be -1.
+	CurrentEventIndex = -1;
+	// Timer will be set by BeginPlay.
+	timerSet = false;
+}
+
+void AGoingHomeGameState::TimerHandler()
+{
+	// Time for next event. Timer is not yet set.
+	++CurrentEventIndex;
+	timerSet = false;
+
+	// If we've reached the end of our array, stop.
+	if (Events.Num() == CurrentEventIndex)
+	{
+		UE_LOG(GoingHomeLog, Log, TEXT("Completed dialog events."));
+		--CurrentEventIndex;
+		return;
+	}
+
+	auto& currentEvent = Events[CurrentEventIndex];
+
+	// Set the text for the HUD blueprint to read.
+	DisplayText = currentEvent.Text.ToString();
+
+	// If we have no PlayerActions to track and we have a time, then setup the next timer.
+	if (currentEvent.PlayerActions.Num() == 0 && currentEvent.Time > 0)
+	{
+		UE_LOG(GoingHomeLog, Log, TEXT("Setting timer of %s (%d) to %d"), *currentEvent.EventId.ToString(), CurrentEventIndex, currentEvent.Time);
+		GetWorldTimerManager().SetTimer(EventTimerHandle, this, &AGoingHomeGameState::TimerHandler, currentEvent.Time);
+	}
+	else
+	{
+		UE_LOG(GoingHomeLog, Log, TEXT("Skipping timer of %s (%d)"), *currentEvent.EventId.ToString(), CurrentEventIndex);
+	}
 }
 
 void AGoingHomeGameState::HandleInteractionEvent(FName type, FName other)
@@ -210,7 +232,7 @@ void AGoingHomeGameState::HandleShipEvent(int index)
 		currentEvent.PlayerActions.RemoveAt(index);
 	}
 
-	if (currentEvent.PlayerActions.Num() == 0 && !timerSet) 
+	if (currentEvent.PlayerActions.Num() == 0 && !timerSet)
 	{
 		timerSet = true;
 		GetWorldTimerManager().SetTimer(EventTimerHandle, this, &AGoingHomeGameState::TimerHandler, currentEvent.Time);

@@ -3,7 +3,7 @@
 #include "GoingHome.h"
 #include "GoingHomeGameState.h"
 
-AGoingHomeGameState::AGoingHomeGameState()
+AGoingHomeGameState::AGoingHomeGameState(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	Initialise();
 }
@@ -41,7 +41,7 @@ void AGoingHomeGameState::BeginPlay()
 			else
 			{
 				// This is why it's awkward to use AddDefaulted(1), but it's probably not that important unless we have lots of malformed events.
-				UE_LOG(GoingHomeLog, Warning, TEXT("skipping bad event for index %d"), Events.Num());
+				UE_LOG(GoingHomeGameState, Warning, TEXT("skipping bad event for index %d"), Events.Num());
 				Events.Pop();
 				continue;
 			}
@@ -59,7 +59,7 @@ void AGoingHomeGameState::BeginPlay()
 			}
 			else
 			{
-				UE_LOG(GoingHomeLog, Warning, TEXT("Empty text for event %s"), *storedEvent.EventId.ToString());
+				UE_LOG(GoingHomeGameState, Warning, TEXT("Empty text for event %s"), *storedEvent.EventId.ToString());
 				storedEvent.Text = FText::GetEmpty();
 			}
 
@@ -101,7 +101,7 @@ void AGoingHomeGameState::BeginPlay()
 	else
 	{
 		// Missing or malformed json file.
-		UE_LOG(GoingHomeLog, Error, TEXT("Could not deserialize path %s"), *path);
+		UE_LOG(GoingHomeGameState, Error, TEXT("Could not deserialize path %s"), *path);
 	}
 }
 
@@ -170,7 +170,7 @@ void AGoingHomeGameState::TimerHandler()
 	// If we've reached the end of our array, stop.
 	if (Events.Num() == CurrentEventIndex)
 	{
-		UE_LOG(GoingHomeLog, Log, TEXT("Completed dialog events."));
+		UE_LOG(GoingHomeGameState, Log, TEXT("Completed dialog events."));
 		--CurrentEventIndex;
 		return;
 	}
@@ -183,12 +183,12 @@ void AGoingHomeGameState::TimerHandler()
 	// If we have no PlayerActions to track and we have a time, then setup the next timer.
 	if (currentEvent.PlayerActions.Num() == 0 && currentEvent.Time > 0)
 	{
-		UE_LOG(GoingHomeLog, Log, TEXT("Setting timer of %s (%d) to %d"), *currentEvent.EventId.ToString(), CurrentEventIndex, currentEvent.Time);
+		UE_LOG(GoingHomeGameState, Log, TEXT("Setting timer of %s (%d) to %d"), *currentEvent.EventId.ToString(), CurrentEventIndex, currentEvent.Time);
 		GetWorldTimerManager().SetTimer(EventTimerHandle, this, &AGoingHomeGameState::TimerHandler, currentEvent.Time);
 	}
 	else
 	{
-		UE_LOG(GoingHomeLog, Log, TEXT("Skipping timer of %s (%d)"), *currentEvent.EventId.ToString(), CurrentEventIndex);
+		UE_LOG(GoingHomeGameState, Log, TEXT("Skipping timer of %s (%d)"), *currentEvent.EventId.ToString(), CurrentEventIndex);
 	}
 }
 

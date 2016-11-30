@@ -12,3 +12,7 @@
 #endif
 
 DECLARE_LOG_CATEGORY_EXTERN(GoingHomeLog, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(GoingHomeGameState, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(GoingHomeEnemyPawn, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(GoingHomeEnemyAIController, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(GoingHomeEnemySightComponent, Log, All);

@@ -52,10 +52,11 @@ public:
 	//~=============================================================================
 	// Constructors and overrides.
 
-	/** Basic constructor for initialization. Should probably try to do more here, 
+	/** 
+	 * Basic constructor for initialization. Should probably try to do more here, 
 	 * as long as it doens't require interacting with other actors. 
 	 */
-	AGoingHomeGameState();
+	AGoingHomeGameState(const FObjectInitializer& ObjectInitializer);
 
 	/** Initialisation that depends on other actors being alive or available. */
 	virtual void BeginPlay() override;
@@ -64,7 +65,8 @@ public:
 	//~=============================================================================
 	// Ship Events
 	
-	/** Mined amount incremented everytime we mine an asteroid. 
+	/** 
+	 * Mined amount incremented everytime we mine an asteroid. 
 	 * Used by BP_HUD_Debug.
 	 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Mining")
@@ -74,7 +76,8 @@ public:
 	//~=============================================================================
 	// Dialog Events
 
-	/** Current event display text. If empty, it will not show anything (not even 
+	/** 
+	 * Current event display text. If empty, it will not show anything (not even 
 	 * the bar below; set to " " to show it with no text). 
 	 * Used by BP_HUD_Dialog.
 	 */
@@ -83,9 +86,10 @@ public:
 
 	/** Array of all level events. Visible for debugging purposes. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "DialogEvents")
-	TArray<FDialogEvent> Events;
+	TArray<struct FDialogEvent> Events;
 
-	/** Current event as an index in the Events array. Visible for debugging 
+	/** 
+	 * Current event as an index in the Events array. Visible for debugging 
 	 * porposes only. 
 	 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "DialogEvents")
@@ -125,7 +129,7 @@ public:
 
 	/** Handler for the projectile hit event. Triggered by BP_ShipProjectile. */
 	UFUNCTION(BlueprintCallable, Category = "ShipEvents")
-	void OnProjectileHit(AActor const* shooter, AActor const* victim);
+	void OnProjectileHit(class AActor const* shooter, class AActor const* victim);
 
 
 private:
@@ -136,28 +140,32 @@ private:
 	void Initialise();
 
 	/** Timer handle for the dialog events timers. */
-	FTimerHandle EventTimerHandle;
+	struct FTimerHandle EventTimerHandle;
 
 	/** True if a timer has already been set, to avoid resetting it on events. */
 	bool timerSet;
 
-	/** Callback for the timer. Increments CurrentEventIndex, resets timerSet and  
+	/** 
+	 * Callback for the timer. Increments CurrentEventIndex, resets timerSet and  
 	 * sets up next timer if needed.
 	 * TODO: fix the indexing issue where you need an extra dummy event at the end.
 	 */
 	void TimerHandler();
 
-	/** Helper used for event actions that take a parameter. Calls HandleShipEvent(int)
+	/** 
+	 * Helper used for event actions that take a parameter. Calls HandleShipEvent(int)
 	 * because there might be multiple identical events with different parameters.
 	 */
 	void HandleInteractionEvent(FName type, FName other);
 
-	/** Finds the index of first action in CurrentEventIndex / PlayerActions that 
+	/** 
+	 * Finds the index of first action in CurrentEventIndex / PlayerActions that 
 	 * matches type and calls HandleShipEvent(int).
 	 */
 	void HandleShipEvent(FName type);
 
-	/** Removes the index action from CurrentEventIndex / PlayerActions. If there are 
+	/** 
+	 * Removes the index action from CurrentEventIndex / PlayerActions. If there are 
 	 * no actions left, queues the timer. 
 	 */
 	void HandleShipEvent(int index);

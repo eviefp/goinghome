@@ -230,6 +230,8 @@ void AGoingHomeGameState::HandleShipEvent(int index)
 	if (index >= 0)
 	{
 		currentEvent.PlayerActions.RemoveAt(index);
+		if (currentEvent.PlayerActionArguments.Num() > index)
+			currentEvent.PlayerActionArguments.RemoveAt(index);
 	}
 
 	if (currentEvent.PlayerActions.Num() == 0 && !timerSet)

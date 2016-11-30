@@ -11,27 +11,10 @@ AEnemyPawn::AEnemyPawn(const FObjectInitializer& ObjectInitializer) : Super(Obje
 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	EnemyRootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("EnemyRootComponent"));
-	SetRootComponent(EnemyRootComponent);
+	EnemyShipMesh = ObjectInitializer.CreateDefaultSubobject<UStaticMeshComponent>(this, TEXT("EnemyShipMesh"));
+	EnemySightComponent = ObjectInitializer.CreateDefaultSubobject<UEnemySightComponent>(EnemyShipMesh, TEXT("EnemySightComponent"));
 
-	EnemyShipMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("EnemyShipMesh"));
-
-	if (EnemyShipMesh != nullptr)
-	{
-		EnemyShipMesh->AlwaysLoadOnClient = true;
-		EnemyShipMesh->AlwaysLoadOnServer = true;
-		EnemyShipMesh->bOwnerNoSee = false;
-		EnemyShipMesh->bCastDynamicShadow = true;
-		EnemyShipMesh->bAffectDynamicIndirectLighting = true;
-		EnemyShipMesh->SetupAttachment(RootComponent);
-	}
-
-	EnemySightComponent = CreateDefaultSubobject<UEnemySightComponent>(TEXT("EnemySightComponent"));
-
-	if (EnemySightComponent != nullptr)
-	{
-		EnemySightComponent->SetupAttachment(RootComponent);
-	}
+	RootComponent = EnemyShipMesh;
 
 	AutoPossessPlayer = EAutoReceiveInput::Disabled;
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
@@ -40,17 +23,12 @@ AEnemyPawn::AEnemyPawn(const FObjectInitializer& ObjectInitializer) : Super(Obje
 	_target = FVector::ZeroVector;
 	PawnTarget = nullptr;
 	ProximityEpsilon = 100;
-	GiveUpEngageIfDistanceIsGreaterThan = 10000;
 }
 
 // Called when the game starts or when spawned
 void AEnemyPawn::BeginPlay()
 {
 	Super::BeginPlay();
-
-	UE_LOG(GoingHomeEnemyPawn, Log, TEXT("Ctor: RootComponent = %s || EnemyShipMesh = %s "),
-		*RootComponent->GetComponentLocation().ToString(),
-		*EnemyShipMesh->GetComponentLocation().ToString());
 
 	EnemyController = Cast<AEnemyAIController>(Controller);
 }
@@ -61,19 +39,7 @@ void AEnemyPawn::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	if (PawnTarget != nullptr)
-	{
 		_target = PawnTarget->GetActorLocation();
-
-		UE_LOG(GoingHomeEnemyPawn, Log, TEXT("Self %s || Target %s || Distance %f"),
-			*RootComponent->GetComponentLocation().ToString(),
-			*_target.ToString(),
-			(_target - RootComponent->GetComponentLocation()).Size());
-
-		if ((_target - RootComponent->GetComponentLocation()).Size() > GiveUpEngageIfDistanceIsGreaterThan)
-		{
-			EnemyController->OnGiveUpEngage();
-		}
-	}
 
 	if(_target == FVector::ZeroVector)
 		return;
@@ -94,7 +60,7 @@ void AEnemyPawn::Tick(float DeltaTime)
 	DrawDebugLine(
 		GetWorld(),
 		RootComponent->GetComponentLocation(),
-		RootComponent->GetComponentLocation() + RootComponent->GetForwardVector() * 3000,
+		RootComponent->GetComponentLocation() + RootComponent->GetForwardVector() * 1000,
 		FColor(0, 255, 0),
 		false, -1, 0,
 		12.333
@@ -110,6 +76,7 @@ void AEnemyPawn::Tick(float DeltaTime)
 
 void AEnemyPawn::MoveTo(FVector worldPosition)
 {
+	UE_LOG(GoingHomeEnemyPawn, Log, TEXT("%s moving to %s"), *GetName() ,*worldPosition.ToString());
 	_target = worldPosition;
 	PawnTarget = nullptr;
 }

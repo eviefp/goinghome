@@ -19,7 +19,7 @@ public:
 	// Constructors and overrides.
 
 	/** Initializes the StaticMesh.*/
-	AEnemyPawn(const FObjectInitializer& ObjectInitializer);
+	AEnemyPawn(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -30,10 +30,18 @@ public:
 
 	//~=============================================================================
 	// Visual Components
+
+	/** The root component. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	class USceneComponent* EnemyRootComponent;
 	
-	/** The ship mesh. Not sure why I can't edit the texture. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
+	/** The ship mesh. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent* EnemyShipMesh;
+
+	/** Sight component. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	class UEnemySightComponent* EnemySightComponent;
 
 
 	//~=============================================================================
@@ -51,10 +59,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float ProximityEpsilon;
 
-	/** Not sure why we're keeping a pointer to this after creating it. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI")
-	class UEnemySightComponent* EnemySightComponent;
-
 
 	//~=============================================================================
 	// AI Behaviour
@@ -62,6 +66,10 @@ public:
 	/** List of waypoints that are patrolled by AI. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	TArray<struct FVector> Waypoints;
+
+	/** Give up if distance is greater than. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	float GiveUpEngageIfDistanceIsGreaterThan;
 
 
 	//~=============================================================================

@@ -7,20 +7,25 @@
         },
         {
             "eventId": "1-welcome",
-            "time": 5,
+            "time": 2,
             "text": "Welcome to Level 1."
         },
         {
             "eventId": "2-avoiding",
-            "time": 5,
+            "time": 2,
             "text": "There is an enemy patroling in the area in front of you. You have to avoid it."
         },
         {
             "eventId": "3-mining",
-            "time": 5,
+            "time": 3,
             "text": "While avoiding it, you will have to mine the three marked asteroids. Be careful!",
             "playerActions": ["mineDestroyed", "mineDestroyed", "mineDestroyed"],
             "playerActionArguments": ["MinableAsteroid1", "MinableAsteroid2", "MinableAsteroid3"]
+        },
+        {
+            "eventId": "4-winnar",
+            "time": 10,
+            "text": "Well done. You completed Level 1"
         },
         {
             "eventId": "999-dummy-end-event",

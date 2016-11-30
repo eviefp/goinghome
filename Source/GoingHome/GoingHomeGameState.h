@@ -56,7 +56,7 @@ public:
 	 * Basic constructor for initialization. Should probably try to do more here, 
 	 * as long as it doens't require interacting with other actors. 
 	 */
-	AGoingHomeGameState(const FObjectInitializer& ObjectInitializer);
+	AGoingHomeGameState(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 	/** Initialisation that depends on other actors being alive or available. */
 	virtual void BeginPlay() override;

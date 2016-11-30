@@ -19,7 +19,7 @@ class GOINGHOME_API AEnemyAIController : public AAIController
 public:
 	//~=============================================================================
 	// Constructors and overrides.
-	AEnemyAIController(const FObjectInitializer& ObjectInitializer);
+	AEnemyAIController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 	/** Called when the game starts or when spawned. */
 	virtual void BeginPlay() override;
@@ -30,6 +30,9 @@ public:
 	
 	/** Called by EnemyPawn when it has reached its target (within Epsilon). */
 	virtual void OnTargetReached();
+
+	/** Called by EnemyPawn when it has reached its target (within Epsilon). */
+	virtual void OnGiveUpEngage();
 
 	/** Called by EnemySightComponent when the player is in sight. */
 	virtual void OnTargetInSight();

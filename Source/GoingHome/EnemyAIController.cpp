@@ -31,11 +31,19 @@ void AEnemyAIController::OnTargetReached()
 	if (CurrentWaypointIndex == EnemyPawn->Waypoints.Num())
 		CurrentWaypointIndex = 0;
 
+	UE_LOG(GoingHomeEnemyAIController, Log, TEXT("Moving to location #%d."), CurrentWaypointIndex);
 	EnemyPawn->MoveTo(EnemyPawn->Waypoints[CurrentWaypointIndex]);
+}
+
+void AEnemyAIController::OnGiveUpEngage()
+{
+	UE_LOG(GoingHomeEnemyAIController, Log, TEXT("Enemy giving up engage."));
+	OnTargetReached();
 }
 
 void AEnemyAIController::OnTargetInSight()
 {
 	auto pawn = GetWorld()->GetFirstPlayerController()->GetPawn();
+	UE_LOG(GoingHomeEnemyAIController, Log, TEXT("Engaging pawn: %s."), *pawn->GetName());
 	EnemyPawn->EngagePawn(pawn);
 }

@@ -8,7 +8,7 @@
 /**
  * EnemySightComponent creates a trigger box in front of it and 
  */
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(meta=(BlueprintSpawnableComponent) )
 class GOINGHOME_API UEnemySightComponent : public USceneComponent
 {
 	GENERATED_BODY()
@@ -16,10 +16,20 @@ class GOINGHOME_API UEnemySightComponent : public USceneComponent
 
 public:	
 	//~=============================================================================
+	// Property names.
+
+	/** SightRangeName needs to be tracked and updated. */
+	static FName SightRangeName;
+
+
+	//~=============================================================================
 	// Constructors and overrides.
 
 	/** Default constructor. */
-	UEnemySightComponent(const FObjectInitializer& ObjectInitializer);
+	UEnemySightComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+	/***/
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 
 	/** Called when the game starts. */
 	virtual void BeginPlay() override;
@@ -36,12 +46,10 @@ public:
 	float SightRange;
 
 	/** BoxComponent used for collision detection. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ZDontChangeMe")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
 	class UBoxComponent* SightCollisionComponent;
 	
 
-	//~=============================================================================
-	// Private
 private:
 
 	/** Enemy Pawn casted to the appropriate class. */

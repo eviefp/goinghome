@@ -5,6 +5,8 @@
 #include "EnemyPawn.h"
 #include "EnemyAIController.h"
 
+FName UEnemySightComponent::SightRangeName(TEXT("SightRange"));
+
 // Sets default values for this component's properties
 UEnemySightComponent::UEnemySightComponent(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -12,10 +14,38 @@ UEnemySightComponent::UEnemySightComponent(const FObjectInitializer& ObjectIniti
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 
-	SightCollisionComponent = ObjectInitializer.CreateDefaultSubobject<UBoxComponent>(this, TEXT("EnemySightBoxCollisionComponent"));
 	SightRange = 1000;
+
+	SightCollisionComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("SightCollisionComponent"));
+
+	if (SightCollisionComponent != nullptr)
+	{
+		SightCollisionComponent->AlwaysLoadOnClient = true;
+		SightCollisionComponent->AlwaysLoadOnServer = true;
+		SightCollisionComponent->bOwnerNoSee = false;
+		SightCollisionComponent->bCastDynamicShadow = false;
+		SightCollisionComponent->bAffectDynamicIndirectLighting = true;
+		SightCollisionComponent->SetHiddenInGame(false);
+		SightCollisionComponent->SetBoxExtent(FVector(SightRange * 2));
+		SightCollisionComponent->SetupAttachment(this);
+	}
+
+	
 }
 
+
+void UEnemySightComponent::PostEditChangeProperty(FPropertyChangedEvent & PropertyChangedEvent)
+{
+	auto propertyName = PropertyChangedEvent.Property != nullptr ? PropertyChangedEvent.Property->GetFName() : NAME_None;
+
+	if (propertyName == SightRangeName)
+	{
+		UE_LOG(GoingHomeEnemySightComponent, Log, TEXT("Property changed to %f"), SightRange * 2);
+		SightCollisionComponent->SetBoxExtent(FVector(SightRange * 2));
+	}
+
+	UE_LOG(GoingHomeEnemySightComponent, Log, TEXT("Property changed %s"), *propertyName.ToString());
+}
 
 // Called when the game starts
 void UEnemySightComponent::BeginPlay()
@@ -24,8 +54,6 @@ void UEnemySightComponent::BeginPlay()
 
 	isOverlapping = false;
 	
-	SightCollisionComponent->SetHiddenInGame(false);
-	SightCollisionComponent->SetBoxExtent(FVector(SightRange* 2));
 	SightCollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &UEnemySightComponent::OnBeginOverlap);
 	SightCollisionComponent->OnComponentEndOverlap.AddDynamic(this, &UEnemySightComponent::OnEndOverlap);
 
@@ -50,6 +78,7 @@ void UEnemySightComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 		
 		if (rotation.Roll <= 90 && rotation.Pitch <= 90 && rotation.Yaw <= 90)
 		{
+			UE_LOG(GoingHomeEnemySightComponent, Log, TEXT("Pawn seen: %s"), *PlayerPawn->GetName());
 			EnemyController->OnTargetInSight();
 			isOverlapping = false;
 		}
@@ -60,6 +89,7 @@ void UEnemySightComponent::OnBeginOverlap(class UPrimitiveComponent* OverlappedC
 {
 	if (Cast<APawn>(OtherActor) != nullptr) 
 	{
+		UE_LOG(GoingHomeEnemySightComponent, Log, TEXT("Pawn is overlapping: %s"), *OtherActor->GetName());
 		isOverlapping = true;
 	}
 }
@@ -68,6 +98,7 @@ void UEnemySightComponent::OnEndOverlap(class UPrimitiveComponent* OverlappedCom
 {
 	if (Cast<APawn>(OtherActor) != nullptr)
 	{
+		UE_LOG(GoingHomeEnemySightComponent, Log, TEXT("Pawn left overlap area: %s"), *OtherActor->GetName());
 		isOverlapping = false;
 	}
 }

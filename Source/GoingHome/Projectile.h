@@ -25,5 +25,8 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "MyCategory")
 	AActor* GetProjectileParent() const;
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "MyCategory")
+	void SetLinearVelocity(const FVector& velocity);
 	
 };

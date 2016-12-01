@@ -28,8 +28,10 @@ public:
 	/** Default constructor. */
 	UEnemySightComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
+#if WITH_EDITOR
 	/***/
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
 
 	/** Called when the game starts. */
 	virtual void BeginPlay() override;

@@ -154,6 +154,7 @@ void AGoingHomeGameState::OnProjectileHit(AActor* shooter, AActor* victim)
 
 	auto enemyPawn = Cast<AEnemyPawn>(victim);
 	auto playerPawn = Cast<APawn>(shooter);
+
 	if (enemyPawn != nullptr && shooter != nullptr)
 	{
 		auto damageEvent = FDamageEvent(UProjectileDamageType::StaticClass());
@@ -164,6 +165,18 @@ void AGoingHomeGameState::OnProjectileHit(AActor* shooter, AActor* victim)
 		{
 			enemyPawn->Destroy();
 		}
+
+		return;
+	}
+
+	enemyPawn = Cast<AEnemyPawn>(shooter);
+	playerPawn = Cast<APawn>(victim);
+
+	if (enemyPawn != nullptr && shooter != nullptr)
+	{
+		PlayerHitPoints -= 50;
+
+		UE_LOG(GoingHomeGameState, Log, TEXT("Player got hit, remaining HP: %d"), PlayerHitPoints);
 	}
 }
 
@@ -175,6 +188,8 @@ void AGoingHomeGameState::Initialise()
 	CurrentEventIndex = -1;
 	// Timer will be set by BeginPlay.
 	timerSet = false;
+	//
+	PlayerHitPoints = 100;
 }
 
 void AGoingHomeGameState::TimerHandler()

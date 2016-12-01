@@ -169,5 +169,7 @@ private:
 	 * no actions left, queues the timer. 
 	 */
 	void HandleShipEvent(int index);
-	
+
+	/** Player HP, currently held here until I implement the PlayerPawn properly. */
+	int32 PlayerHitPoints;
 };

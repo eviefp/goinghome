@@ -24,6 +24,7 @@ UEnemySightComponent::UEnemySightComponent(const FObjectInitializer& ObjectIniti
 	SetHiddenInGame(false);
 }
 
+#if WITH_EDITOR
 void UEnemySightComponent::PostEditChangeProperty(FPropertyChangedEvent & PropertyChangedEvent)
 {
 	auto propertyName = PropertyChangedEvent.Property != nullptr ? PropertyChangedEvent.Property->GetFName() : NAME_None;
@@ -36,6 +37,7 @@ void UEnemySightComponent::PostEditChangeProperty(FPropertyChangedEvent & Proper
 
 	UE_LOG(GoingHomeEnemySightComponent, Log, TEXT("Property changed %s"), *propertyName.ToString());
 }
+#endif
 
 // Called when the game starts
 void UEnemySightComponent::BeginPlay()
@@ -62,13 +64,12 @@ void UEnemySightComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 	
 	if (isOverlapping)
 	{
-		auto playerLocation = PlayerPawn->GetActorLocation();
-		auto rootComponent = EnemyPawn->GetRootComponent();
-		auto myTransform = rootComponent->GetComponentTransform();
-
-		auto rotation = rootComponent->GetComponentRotation() - (myTransform.GetLocation() - playerLocation).Rotation();
+		const auto playerLocation = PlayerPawn->GetActorLocation();
+		const auto myLocation = EnemyPawn->GetActorLocation();
+		const auto rotation = (playerLocation - myLocation).Rotation();
+		const auto deltaRotation = rotation - EnemyPawn->GetActorRotation();
 		
-		if (rotation.Roll <= 90 && rotation.Pitch <= 90 && rotation.Yaw <= 90)
+		if (deltaRotation.Roll <= 90 && deltaRotation.Pitch <= 90 && deltaRotation.Yaw <= 90)
 		{
 			UE_LOG(GoingHomeEnemySightComponent, Log, TEXT("Pawn seen: %s"), *PlayerPawn->GetName());
 			EnemyController->OnTargetInSight();

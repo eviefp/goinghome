@@ -4,7 +4,6 @@
 #include "EnemyPawn.h"
 #include "EnemyAIController.h"
 #include "EnemySightComponent.h"
-#include "Projectile.h"
 
 // Sets default values
 AEnemyPawn::AEnemyPawn(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -12,11 +11,11 @@ AEnemyPawn::AEnemyPawn(const FObjectInitializer& ObjectInitializer) : Super(Obje
 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	static ConstructorHelpers::FObjectFinder<UClass> ProjectileBlueprintClassFinder(TEXT("Class'/Game/Blueprints/BP_ShipProjectile.BP_ShipProjectile_C'"));
+	static ConstructorHelpers::FObjectFinder<UBlueprint> ProjectileBlueprint(TEXT("Blueprint'/Game/Blueprints/BP_ShipProjectile.BP_ShipProjectile'"));
 
-	if (ProjectileBlueprintClassFinder.Object != nullptr)
+	if (ProjectileBlueprint.Object != nullptr)
 	{
-		ProjectileBlueprintClass = ProjectileBlueprintClassFinder.Object;
+		ProjectileBlueprintClass = ProjectileBlueprint.Object->GeneratedClass;
 	}
 	
 	EnemyRootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("EnemyRootComponent"));
@@ -49,7 +48,7 @@ AEnemyPawn::AEnemyPawn(const FObjectInitializer& ObjectInitializer) : Super(Obje
 	PawnTarget = nullptr;
 	ProximityEpsilon = 100;
 	CurrentHitPoints = 100;
-	RateOfFire = 1;
+	RateOfFire = 0.2;
 	GiveUpEngageIfDistanceIsGreaterThan = 10000;
 }
 
@@ -60,11 +59,9 @@ void AEnemyPawn::BeginPlay()
 
 	UE_LOG(GoingHomeEnemyPawn, Log, TEXT("Ctor: RootComponent = %s || EnemyShipMesh = %s "),
 		*RootComponent->GetComponentLocation().ToString(),
-		*EnemyShipMesh->GetComponentLocation().ToString()
-	);
+		*EnemyShipMesh->GetComponentLocation().ToString());
 
 	EnemyController = Cast<AEnemyAIController>(Controller);
-	LastTimeWeShot = -100;
 }
 
 // Called every frame
@@ -109,31 +106,28 @@ void AEnemyPawn::Tick(float DeltaTime)
 	}
 
 	// Forward vector debug line.
-	//DrawDebugLine(
-	//	GetWorld(),
-	//	RootComponent->GetComponentLocation(),
-	//	RootComponent->GetComponentLocation() + RootComponent->GetForwardVector() * 3000,
-	//	FColor(0, 255, 0),
-	//	false, 0.1, 0,
-	//	30
-	//);
+	DrawDebugLine(
+		GetWorld(),
+		RootComponent->GetComponentLocation(),
+		RootComponent->GetComponentLocation() + RootComponent->GetForwardVector() * 3000,
+		FColor(0, 255, 0),
+		false, 0.1, 0,
+		30
+	);
 
 	// If we are currently engaging a target, give up if distance is too big.
 	if (PawnTarget != nullptr)
 	{
-		if (deltaRotation.IsNearlyZero(0.1))
+		UE_LOG(GoingHomeEnemyPawn, Log, TEXT("Giving up engage at Self %s || Target %s || Distance %f"),
+			*RootComponent->GetComponentLocation().ToString(),
+			*_target.ToString(),
+			deltaLocation.Size());
+
+		if (deltaRotation.IsNearlyZero())
 			Shoot();
 
-		if (deltaLocation.Size() > GiveUpEngageIfDistanceIsGreaterThan)
-		{
-			UE_LOG(GoingHomeEnemyPawn, Log, TEXT("Giving up engage at Self %s || Target %s || Distance %f"),
-				*RootComponent->GetComponentLocation().ToString(),
-				*_target.ToString(),
-				deltaLocation.Size()
-			);
-
+		if(deltaLocation.Size() > GiveUpEngageIfDistanceIsGreaterThan)
 			EnemyController->OnGiveUpEngage();
-		}
 	}
 
 	// Otherwise, if we're not engaging and we're close enough, reset movement and notify controller.
@@ -158,24 +152,11 @@ void AEnemyPawn::EngagePawn(APawn* Player)
 float AEnemyPawn::TakeDamage(float DamageAmount, FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser)
 {
 	CurrentHitPoints -= DamageAmount;
-
-	UE_LOG(GoingHomeEnemyPawn, Log, TEXT("Took damage from %s. I have %d HP left."), 
-		*DamageCauser->GetName(),
-		CurrentHitPoints
-	);
-
 	return DamageAmount;
 }
 
 void AEnemyPawn::Shoot()
 {
-	auto timeNow = GetWorld()->GetTimeSeconds();
-
-	if ((timeNow - LastTimeWeShot) * RateOfFire < 1)
-		return;
-
-	LastTimeWeShot = timeNow;
-
 	// current transform
 	auto transform = GetActorTransform();
 
@@ -183,14 +164,4 @@ void AEnemyPawn::Shoot()
 	transform.SetLocation(transform.GetLocation() + GetActorForwardVector() * 100);
 
 	//Spawn
-	FActorSpawnParameters spawnParams;
-	spawnParams.Instigator = this;
-	spawnParams.Owner = this;
-	
-	auto projectile = GetWorld()->SpawnActor<AActor>(ProjectileBlueprintClass, transform, spawnParams);
-	if (projectile != nullptr)
-	{
-		IProjectile::Execute_SetProjectileParent(projectile, this);
-		IProjectile::Execute_SetLinearVelocity(projectile, GetActorForwardVector() * 50000);
-	}
 }

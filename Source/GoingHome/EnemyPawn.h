@@ -71,8 +71,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	float GiveUpEngageIfDistanceIsGreaterThan;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitPoints")
-	float CurrentHitPoints;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay")
+	int32 CurrentHitPoints;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gameplay")
+	float RateOfFire;
 
 
 	//~=============================================================================
@@ -84,9 +87,21 @@ public:
 	 */
 	virtual void MoveTo(struct FVector worldPosition);
 
+	/**
+	 * Called by EnemyAIController when a player is seen. The Pawn does the rest:
+	 * following, giving up, etc.
+	 */
 	virtual void EngagePawn(class APawn* Player);
 
+	/**
+	 * Called by GameState when a projectile hits.
+	 */
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser);
+
+	/**
+	 * Called by self when the relative rotation is nearly zero. Shoots forward.
+	 */
+	virtual void Shoot();
 
 
 	//~=============================================================================
@@ -99,7 +114,12 @@ private:
 	/** We need to keep track of where we're going. */
 	struct FVector _target;
 
-	/**  */
+	/** Player. */
 	class APawn* PawnTarget;
 
+	/** The Projectile blueprint class we will create for shooting. */
+	TSubclassOf<class AActor> ProjectileBlueprintClass; 
+
+	/** Last time we shot. */
+	float LastTimeWeShot;
 };

@@ -1,0 +1,19 @@
+{
+    "events": [
+        {
+            "eventId": "0-breather",
+            "time": 1,
+            "text:": ""
+        },
+        {
+            "eventId": "1-welcome",
+            "time": 10,
+            "text": "Welcome to the Space Station. There's nothing to do here."
+        },
+        {
+            "eventId": "999-dummy-end-event",
+            "time": 2,
+            "text": ""
+        }
+    ]
+}

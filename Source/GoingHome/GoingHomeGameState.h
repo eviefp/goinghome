@@ -129,7 +129,7 @@ public:
 
 	/** Handler for the projectile hit event. Triggered by BP_ShipProjectile. */
 	UFUNCTION(BlueprintCallable, Category = "ShipEvents")
-	void OnProjectileHit(class AActor const* shooter, class AActor const* victim);
+	void OnProjectileHit(class AActor* shooter, class AActor* victim);
 
 
 private:

@@ -16,23 +16,13 @@ UEnemySightComponent::UEnemySightComponent(const FObjectInitializer& ObjectIniti
 
 	SightRange = 1000;
 
-	SightCollisionComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("SightCollisionComponent"));
-
-	if (SightCollisionComponent != nullptr)
-	{
-		SightCollisionComponent->AlwaysLoadOnClient = true;
-		SightCollisionComponent->AlwaysLoadOnServer = true;
-		SightCollisionComponent->bOwnerNoSee = false;
-		SightCollisionComponent->bCastDynamicShadow = false;
-		SightCollisionComponent->bAffectDynamicIndirectLighting = true;
-		SightCollisionComponent->SetHiddenInGame(false);
-		SightCollisionComponent->SetBoxExtent(FVector(SightRange * 2));
-		SightCollisionComponent->SetupAttachment(this);
-	}
-
-	
+	AlwaysLoadOnClient = true;
+	AlwaysLoadOnServer = true;
+	bOwnerNoSee = false;
+	bCastDynamicShadow = false;
+	bAffectDynamicIndirectLighting = true;
+	SetHiddenInGame(false);
 }
-
 
 void UEnemySightComponent::PostEditChangeProperty(FPropertyChangedEvent & PropertyChangedEvent)
 {
@@ -41,7 +31,7 @@ void UEnemySightComponent::PostEditChangeProperty(FPropertyChangedEvent & Proper
 	if (propertyName == SightRangeName)
 	{
 		UE_LOG(GoingHomeEnemySightComponent, Log, TEXT("Property changed to %f"), SightRange * 2);
-		SightCollisionComponent->SetBoxExtent(FVector(SightRange * 2));
+		SetBoxExtent(FVector(SightRange * 2));
 	}
 
 	UE_LOG(GoingHomeEnemySightComponent, Log, TEXT("Property changed %s"), *propertyName.ToString());
@@ -52,10 +42,12 @@ void UEnemySightComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	SetBoxExtent(FVector(SightRange * 2));
+
 	isOverlapping = false;
 	
-	SightCollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &UEnemySightComponent::OnBeginOverlap);
-	SightCollisionComponent->OnComponentEndOverlap.AddDynamic(this, &UEnemySightComponent::OnEndOverlap);
+	OnComponentBeginOverlap.AddDynamic(this, &UEnemySightComponent::OnBeginOverlap);
+	OnComponentEndOverlap.AddDynamic(this, &UEnemySightComponent::OnEndOverlap);
 
 	EnemyPawn = Cast<AEnemyPawn>(GetOwner());
 	PlayerPawn = GetWorld()->GetFirstPlayerController()->GetPawn();

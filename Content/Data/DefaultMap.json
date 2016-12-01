@@ -65,7 +65,7 @@
         {
             "eventId": "10-tutorial-done",
             "time": 5,
-            "text": "Whoopie! You have completed the tutorial!!!"
+            "text": "Whoopie! Okay, now go through the big marked gate."
         },
         {
             "eventId": "999-dummy-end-event",

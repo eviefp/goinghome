@@ -40,6 +40,7 @@ AEnemyPawn::AEnemyPawn(const FObjectInitializer& ObjectInitializer) : Super(Obje
 	_target = FVector::ZeroVector;
 	PawnTarget = nullptr;
 	ProximityEpsilon = 100;
+	CurrentHitPoints = 100;
 	GiveUpEngageIfDistanceIsGreaterThan = 10000;
 }
 
@@ -79,8 +80,15 @@ void AEnemyPawn::Tick(float DeltaTime)
 		return;
 
 	// Setup rotation
-	auto newRotation = RootComponent->GetComponentRotation() - (RootComponent->GetComponentLocation() - _target).Rotation();
+	//auto newRotation = FQuat::FindBetween(RootComponent->GetComponentLocation(), _target).Rotator();
+	
+	auto newRotation = FRotationMatrix::MakeFromX(_target - GetActorLocation()).Rotator() - GetActorRotation();
 	auto interpolatedRotation = FMath::RInterpConstantTo(FRotator::ZeroRotator, newRotation, DeltaTime, TurnSpeed);
+
+	UE_LOG(GoingHomeEnemyPawn, Log, TEXT("Now: %s || Target: %s || Lerp: %s"),
+		*RootComponent->GetComponentRotation().ToString(),
+		*newRotation.ToString(),
+		*interpolatedRotation.ToString());
 
 	// Setup position
 	auto currentLocation = RootComponent->GetComponentLocation();
@@ -88,16 +96,17 @@ void AEnemyPawn::Tick(float DeltaTime)
 	auto interpolatedMoveVector = FMath::VInterpConstantTo(FVector::ZeroVector, relativeLocation, DeltaTime, MaxSpeed);
 
 	// Do it
+	AddActorWorldRotation(interpolatedRotation);
 	if((currentLocation - _target).Size() > ProximityEpsilon / 2)
-		AddActorWorldTransform(FTransform(interpolatedRotation, interpolatedMoveVector), false);
+		AddActorWorldOffset(interpolatedMoveVector, false);
 
 	DrawDebugLine(
 		GetWorld(),
 		RootComponent->GetComponentLocation(),
-		RootComponent->GetComponentLocation() + RootComponent->GetForwardVector() * 3000,
+		RootComponent->GetComponentLocation() + RootComponent->GetForwardVector() * 1000,
 		FColor(0, 255, 0),
-		false, -1, 0,
-		12.333
+		false, 0.1, 0,
+		30
 	);
 	
 	// Is it over yet?
@@ -117,4 +126,10 @@ void AEnemyPawn::MoveTo(FVector worldPosition)
 void AEnemyPawn::EngagePawn(APawn* Player)
 {
 	PawnTarget = Player;
+}
+
+float AEnemyPawn::TakeDamage(float DamageAmount, FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser)
+{
+	CurrentHitPoints -= DamageAmount;
+	return DamageAmount;
 }

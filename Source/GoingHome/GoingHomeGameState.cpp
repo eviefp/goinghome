@@ -2,6 +2,8 @@
 
 #include "GoingHome.h"
 #include "GoingHomeGameState.h"
+#include "EnemyPawn.h"
+#include "ProjectileDamageType.h"
 
 AGoingHomeGameState::AGoingHomeGameState(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -144,11 +146,25 @@ void AGoingHomeGameState::OnMineDestroyed(FName other)
 	HandleInteractionEvent("mineDestroyed", other);
 }
 
-void AGoingHomeGameState::OnProjectileHit(AActor const* shooter, AActor const* victim)
+void AGoingHomeGameState::OnProjectileHit(AActor* shooter, AActor* victim)
 {
 	// This should probably be done differnetly.
 	if (shooter->GetName() == "ShippyMcShipFace")
 		HandleInteractionEvent("projectileHit", victim->GetFName());
+
+	auto enemyPawn = Cast<AEnemyPawn>(victim);
+	auto playerPawn = Cast<APawn>(shooter);
+	if (enemyPawn != nullptr && shooter != nullptr)
+	{
+		auto damageEvent = FDamageEvent(UProjectileDamageType::StaticClass());
+
+		enemyPawn->TakeDamage(50, damageEvent, playerPawn->GetController(), shooter);
+
+		if (enemyPawn->CurrentHitPoints <= 0)
+		{
+			enemyPawn->Destroy();
+		}
+	}
 }
 
 void AGoingHomeGameState::Initialise()

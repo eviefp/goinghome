@@ -9,7 +9,7 @@
  * EnemySightComponent creates a trigger box in front of it and 
  */
 UCLASS(meta=(BlueprintSpawnableComponent) )
-class GOINGHOME_API UEnemySightComponent : public USceneComponent
+class GOINGHOME_API UEnemySightComponent : public UBoxComponent
 {
 	GENERATED_BODY()
 
@@ -44,10 +44,6 @@ public:
 	/** Size of the box thing. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SightProperties")
 	float SightRange;
-
-	/** BoxComponent used for collision detection. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
-	class UBoxComponent* SightCollisionComponent;
 	
 
 private:

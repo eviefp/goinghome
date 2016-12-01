@@ -71,6 +71,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	float GiveUpEngageIfDistanceIsGreaterThan;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitPoints")
+	float CurrentHitPoints;
+
 
 	//~=============================================================================
 	// Actions
@@ -82,6 +85,8 @@ public:
 	virtual void MoveTo(struct FVector worldPosition);
 
 	virtual void EngagePawn(class APawn* Player);
+
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser);
 
 
 	//~=============================================================================

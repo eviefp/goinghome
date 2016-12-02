@@ -4,6 +4,10 @@
 #include "GoingHomeGameState.h"
 #include "EnemyPawn.h"
 #include "ProjectileDamageType.h"
+#include "GoingHomeWorldSettings.h"
+#include "UMG.h"
+
+
 
 AGoingHomeGameState::AGoingHomeGameState(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -220,6 +224,20 @@ void AGoingHomeGameState::TimerHandler()
 	else
 	{
 		UE_LOG(GoingHomeGameState, Log, TEXT("Skipping timer of %s (%d)"), *currentEvent.EventId.ToString(), CurrentEventIndex);
+	}
+
+	if (currentEvent.PlayerActionArguments.Num() > 0)
+	{
+		auto world = GetWorld();
+		auto settings = Cast<AGoingHomeWorldSettings>(GetWorld()->GetWorldSettings());
+		for (TActorIterator<AActor> iter(GetWorld()); iter; ++iter)
+		{
+			auto actor = *iter;
+			if (currentEvent.PlayerActionArguments.Contains(FName(*actor->GetName())))
+			{
+				auto widget = CreateWidget<UUserWidget>(GetWorld(), *settings->BeaconWidget);
+			}
+		}
 	}
 }
 

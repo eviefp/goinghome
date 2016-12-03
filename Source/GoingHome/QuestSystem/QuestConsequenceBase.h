@@ -8,13 +8,26 @@
 /**
  * 
  */
-UCLASS(abstract)
+UCLASS()
 class GOINGHOME_API UQuestConsequenceBase : public UObject
 {
 	GENERATED_BODY()
 	
 	
 public:
+	/** Internal ID that can be referenced by other quest triggers / objectives / etc. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName Id;
+
+	/** The quest name. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FText Title;
+
+	/** Detailed information about the quest. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FText Description;
+
+
 	//~=============================================================================
 	// Execute trigger
 

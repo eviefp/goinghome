@@ -3,6 +3,7 @@
 #pragma once
 
 #include "GameFramework/GameStateBase.h"
+//#include "QuestSystem/QuestSystem.h"
 #include "GoingHomeGameState.generated.h"
 
 /**
@@ -94,6 +95,10 @@ public:
 	 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "DialogEvents")
 	int32 CurrentEventIndex;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest")
+	class AQuestSystem* QuestSystem;
 
 
 	//~=============================================================================

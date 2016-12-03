@@ -7,6 +7,6 @@
 
 void UQuestTriggerBase::Execute_Implementation(const UQuest* Quest)
 {
-	UQuest::LogQuestTrace(Quest, FString("UQuestTriggerBase Execute"));
+	UQuest::LogQuestTrace(Quest, FString("UQuestTriggerBase Execute ") + Id.ToString());
 }
 

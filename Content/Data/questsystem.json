@@ -1,0 +1,36 @@
+{
+    "quests": [{
+        "id": "default",
+        "title": "Welcome to GoingHome!",
+        "description": "This is the tutorial quest.",
+        "triggers": [{
+            "type": "QuestTriggerBase",
+            "id": "do-nothing-trigger"
+        }],
+        "objectives": [{
+            "type": "QuestObjectiveBase",
+            "id": "main-objective",
+            "title": "Pitch your ship using mouse",
+            "description": "cba",
+            "event": "OT_Pitch",
+            "source": "",
+            "target": "",
+            "repetitions": 1,
+            "isOptional": false,
+            "isEnabled": true,
+            "showObjective": true
+        }],
+        "completed": [{
+            "type": "QuestConsequenceBase",
+            "id": "complete-consequence",
+            "title": "You get a well done message.",
+            "description": "Tap on the shoulder m8"
+        }],
+        "failed": [ {
+            "type": "QuestConsequenceBase",
+            "id": "fail-consequence",
+            "title": "WTF how do you even.",
+            "description": "Wet"
+        }]
+    }]
+}

@@ -19,6 +19,9 @@ public:
 	//~=============================================================================
 	// Execute trigger
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName Id;
+
 	UFUNCTION(BlueprintNativeEvent, Category = "Quest")
 	void Execute(class UQuest* Quest);
 

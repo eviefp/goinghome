@@ -5,6 +5,7 @@
 #include "EnemyPawn.h"
 #include "ProjectileDamageType.h"
 #include "GoingHomeWorldSettings.h"
+#include "QuestSystem/QuestSystem.h"
 #include "UMG.h"
 
 
@@ -16,6 +17,12 @@ AGoingHomeGameState::AGoingHomeGameState(const FObjectInitializer& ObjectInitial
 
 void AGoingHomeGameState::BeginPlay()
 {
+	if (QuestSystem == nullptr)
+	{
+		FActorSpawnParameters spawnInfo;
+		QuestSystem = GetWorld()->SpawnActor<AQuestSystem>(spawnInfo);
+	}
+
 	// Get the current level name. There should be a similarly named json file in the Data folder for events.
 	auto levelName = GetWorld()->GetName();
 	auto path = FPaths::Combine(FPaths::GameContentDir(), FString("Data/") + levelName + ".json");
@@ -114,6 +121,7 @@ void AGoingHomeGameState::BeginPlay()
 void AGoingHomeGameState::OnPitch(float value)
 {
 	HandleShipEvent("pitch");
+	QuestSystem->OnEvent(EObjectiveEvent::OT_Pitch, nullptr, nullptr, value);
 }
 
 void AGoingHomeGameState::OnYaw(float value)

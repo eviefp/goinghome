@@ -5,12 +5,17 @@
 #include "Quest.h"
 
 
-void UQuestObjectiveBase::OnProgress_Implementation(const UQuest* Quest)
+void UQuestObjectiveBase::OnProgress_Implementation(UQuest* Quest)
 {
-	UQuest::LogQuestTrace(Quest, FString("UQuestObjectiveBase Execute"));
+	UQuest::LogQuestTrace(Quest, FString("UQuestObjectiveBase Progress"));
+	++CurrentRepetitions;
+	IsCompleted = CurrentRepetitions == Repetitions;
+
+	if (IsCompleted)
+		OnComplete(Quest);
 }
 
-void UQuestObjectiveBase::OnComplete_Implementation(const UQuest* Quest)
+void UQuestObjectiveBase::OnComplete_Implementation(UQuest* Quest)
 {
-	UQuest::LogQuestTrace(Quest, FString("UQuestObjectiveBase Execute"));
+	UQuest::LogQuestTrace(Quest, FString("UQuestObjectiveBase Completed"));
 }

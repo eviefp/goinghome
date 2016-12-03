@@ -6,7 +6,7 @@
 #include "QuestObjectiveBase.generated.h"
 
 UENUM(BlueprintType)
-enum class EObjectiveType : uint8
+enum class EObjectiveEvent : uint8
 {
 	OT_Pitch			UMETA(DisplayName = "Pitch"),
 	OT_Roll				UMETA(DisplayName = "Roll"),
@@ -23,7 +23,7 @@ enum class EObjectiveType : uint8
 /**
  * 
  */
-UCLASS()
+UCLASS(BlueprintType)
 class GOINGHOME_API UQuestObjectiveBase : public UObject
 {
 	GENERATED_BODY()
@@ -34,61 +34,65 @@ public:
 	// Objective Properties
 
 	/** Internal ID that can be referenced by other quest triggers / objectives / etc. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName Id;
 
 	/** The quest name. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FText Title;
 
 	/** Detailed information about the quest. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FText Description;
 
 	/** Objective type. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest")
-	EObjectiveType Type;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	EObjectiveEvent Event;
 
 	/** Source, if applicable. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName Source;
 
 	/** Target, if applicable. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName Target;
 
 	/** How many times to complete objective. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest")
-	int32 MinRepetitions;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 Repetitions;
 
-	/** How many times extra are counted to complete objective. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest")
-	int32 MaxRepetitions;
+	/** How many times we repeated this. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 CurrentRepetitions;
 
 	/** Is this objective optional? */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool IsOptional;
 
 	/** Enable by default? Can be used to chain objectives. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool IsEnabled;
 
 	/** Show by default? Can be used for hidden objectives. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Quest")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool ShowObjective;
+
+	/** Show by default? Can be used for hidden objectives. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool IsCompleted;
 
 
 	//~=============================================================================
 	// Objective Events
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Quest")
-	void OnProgress(class UQuest* Quest);
+	void OnProgress(UQuest* Quest);
 
-	virtual void OnProgress_Implementation(const UQuest* Quest);
+	virtual void OnProgress_Implementation(UQuest* Quest);
 
 
 	UFUNCTION(BlueprintNativeEvent, Category = "Quest")
-	void OnComplete(class UQuest* Quest);
+	void OnComplete(UQuest* Quest);
 
-	virtual void OnComplete_Implementation(const UQuest* Quest);
+	virtual void OnComplete_Implementation(UQuest* Quest);
 };

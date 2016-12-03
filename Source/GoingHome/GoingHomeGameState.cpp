@@ -233,9 +233,11 @@ void AGoingHomeGameState::TimerHandler()
 		for (TActorIterator<AActor> iter(GetWorld()); iter; ++iter)
 		{
 			auto actor = *iter;
-			if (currentEvent.PlayerActionArguments.Contains(FName(*actor->GetName())))
+			auto actorName = FName(*actor->GetName());
+			if (currentEvent.PlayerActionArguments.Contains(actorName))
 			{
-				auto widget = CreateWidget<UUserWidget>(GetWorld(), *settings->BeaconWidget);
+				//actor->CreateDefaultSubobject<UBeaconWidgetComponent>(actor->GetName() + );
+				//auto widget = CreateWidget<UUserWidget>(GetWorld(), *settings->BeaconWidget);
 			}
 		}
 	}

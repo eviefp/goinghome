@@ -52,11 +52,15 @@ void AQuestSystem::OnEvent(EObjectiveEvent objEvent, AActor* Source, AActor* Tar
 {
 	for (auto quest : ActiveQuests)
 	{
+		if (quest->IsCompleted)
+			continue;
+
 		auto pendingObjectives = 0;
 
 		for (auto objective : quest->Objectives)
 		{
 			if (!objective->IsCompleted
+				&& objective->IsEnabled
 				&& objective->Event == objEvent
 				&& (objective->Source.IsNone() 
 					|| (Source != nullptr && objective->Source == Source->GetFName()))
@@ -224,69 +228,7 @@ void AQuestSystem::ParseObjective(TSharedPtr<FJsonObject> objectiveObject, UQues
 	Objective->Id = FName(*idString);
 	Quest->Objectives.Add(Objective);
 
-	/** Parse the non-mandatory fields. */
-	FString inputString;
-
-	// Title
-	if (objectiveObject->TryGetStringField("title", inputString))
-	{
-		Objective->Title = FText::FromString(inputString);
-	}
-
-	// Description
-	if (objectiveObject->TryGetStringField("description", inputString))
-	{
-		Objective->Description = FText::FromString(inputString);
-	}
-
-	// Event enum
-	if (objectiveObject->TryGetStringField("event", inputString))
-	{
-		UEnum* Enum = FindObject<UEnum>(ANY_PACKAGE, *FString("EObjectiveEvent"), true);
-		if (!Enum)
-		{
-			Objective->Event = EObjectiveEvent(0);
-		}
-		Objective->Event = (EObjectiveEvent)Enum->FindEnumIndex(FName(*inputString));
-	}
-
-	// Source
-	if (objectiveObject->TryGetStringField("source", inputString))
-	{
-		Objective->Source = FName(*inputString);
-	}
-
-	// Target
-	if (objectiveObject->TryGetStringField("target", inputString))
-	{
-		Objective->Target = FName(*inputString);
-	}
-
-	int32 inputNumber;
-	// Min repetitions
-	if (objectiveObject->TryGetNumberField("repetitions", inputNumber))
-	{
-		Objective->Repetitions = inputNumber;
-	}
-
-	bool inputBool;
-	// Is Optional
-	if (objectiveObject->TryGetBoolField("isOptional", inputBool))
-	{
-		Objective->IsOptional = inputBool;
-	}
-
-	// Is Enabled
-	if (objectiveObject->TryGetBoolField("isEnabled", inputBool))
-	{
-		Objective->IsEnabled = inputBool;
-	}
-
-	// Show Objective
-	if (objectiveObject->TryGetBoolField("showObjective", inputBool))
-	{
-		Objective->ShowObjective = inputBool;
-	}
+	Objective->Parse(objectiveObject);
 }
 
 void AQuestSystem::ParseConsequences(TSharedPtr<FJsonObject> completeObject, class UQuest* Quest, bool complete)

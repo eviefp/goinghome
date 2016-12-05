@@ -127,11 +127,13 @@ void AGoingHomeGameState::OnPitch(float value)
 void AGoingHomeGameState::OnYaw(float value)
 {
 	HandleShipEvent("yaw");
+	QuestSystem->OnEvent(EObjectiveEvent::OT_Yaw, nullptr, nullptr, value);
 }
 
 void AGoingHomeGameState::OnRoll(float value)
 {
 	HandleShipEvent("roll");
+	QuestSystem->OnEvent(EObjectiveEvent::OT_Roll, nullptr, nullptr, value);
 }
 
 void AGoingHomeGameState::OnThrust(float value)
@@ -140,6 +142,7 @@ void AGoingHomeGameState::OnThrust(float value)
 		HandleShipEvent("thrust");
 	else if (value < 0)
 		HandleShipEvent("thrustBackwards");
+	QuestSystem->OnEvent(EObjectiveEvent::OT_Thrust, nullptr, nullptr, value);
 }
 
 void AGoingHomeGameState::OnOverlap(FName other)

@@ -33,6 +33,13 @@ public:
 	//~=============================================================================
 	// Objective Properties
 
+	/** Parse the fields, except the Id. That is mandatory and set by the instigator. */
+	virtual void Parse(TSharedPtr<FJsonObject> objectiveObject);
+
+
+	//~=============================================================================
+	// Objective Properties
+
 	/** Internal ID that can be referenced by other quest triggers / objectives / etc. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName Id;
@@ -77,7 +84,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool ShowObjective;
 
-	/** Show by default? Can be used for hidden objectives. */
+	/** Current state of the objective. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool IsCompleted;
 

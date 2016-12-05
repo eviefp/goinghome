@@ -8,16 +8,43 @@
             "id": "do-nothing-trigger"
         }],
         "objectives": [{
-            "type": "QuestObjectiveBase",
-            "id": "main-objective",
+            "type": "ChainQuestObjective",
+            "id": "start-objective",
             "title": "Pitch your ship using mouse",
             "description": "cba",
             "event": "OT_Pitch",
-            "source": "",
-            "target": "",
             "repetitions": 1,
-            "isOptional": false,
             "isEnabled": true,
+            "showObjective": true,
+            "nextObjectiveId": "yaw-ship"
+        }, {
+            "type": "ChainQuestObjective",
+            "id": "yaw-ship",
+            "title": "Yaw your ship using mouse",
+            "description": "cba",
+            "event": "OT_Yaw",
+            "repetitions": 1,
+            "isEnabled": false,
+            "showObjective": true,
+            "nextObjectiveId": "roll-ship"
+        }, {
+            "type": "ChainQuestObjective",
+            "id": "roll-ship",
+            "title": "Roll your ship using Q/E",
+            "description": "cba",
+            "event": "OT_Roll",
+            "repetitions": 1,
+            "isEnabled": false,
+            "showObjective": true,
+            "nextObjectiveId": "thrust-ship"
+        }, {
+            "type": "ChainQuestObjective",
+            "id": "thrust-ship",
+            "title": "Thrust your ship using space / ctrl or shift or something",
+            "description": "cba",
+            "event": "OT_Thrust",
+            "repetitions": 1,
+            "isEnabled": false,
             "showObjective": true
         }],
         "completed": [{

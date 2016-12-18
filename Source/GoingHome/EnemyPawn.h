@@ -3,6 +3,7 @@
 #pragma once
 
 #include "GameFramework/Pawn.h"
+#include "DonNavigationManager.h"
 #include "EnemyPawn.generated.h"
 
 /**
@@ -31,10 +32,6 @@ public:
 	//~=============================================================================
 	// Visual Components
 
-	/** The root component. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	class USceneComponent* EnemyRootComponent;
-	
 	/** The ship mesh. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent* EnemyShipMesh;
@@ -122,4 +119,20 @@ private:
 
 	/** Last time we shot. */
 	float LastTimeWeShot;
+
+	/** Don Navigation Manager, set on BeginPlay from WorldSettings. */
+	class ADonNavigationManager* NavigationManager;
+
+	struct FTimerHandle PathRetryTimerHandle;
+
+	TArray<FVector> PathSolutionWaypoints;
+
+	void InitialiseNavigationManager();
+
+	/** Handler */
+	UFUNCTION()
+	void NavigationQuqeryHandler(const FDoNNavigationQueryData& data);
+
+	UFUNCTION()
+	void DynamicNavigationQuqeryHandler(const FDonNavigationDynamicCollisionPayload& data);
 };

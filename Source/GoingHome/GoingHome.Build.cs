@@ -12,6 +12,9 @@ public class GoingHome : ModuleRules
 
         PublicIncludePaths.AddRange(new string[] { "QuestSystem" });
 
+        PrivateDependencyModuleNames.AddRange(new string[] { "DonAINavigation" });
+        PrivateIncludePathModuleNames.AddRange(new string[] { "DonAINavigation" });
+
         // Uncomment if you are using online features
         // PrivateDependencyModuleNames.Add("OnlineSubsystem");
 

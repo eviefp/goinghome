@@ -5,6 +5,8 @@
 #include "EnemyAIController.h"
 #include "EnemySightComponent.h"
 #include "Projectile.h"
+#include "GoingHomeWorldSettings.h"
+#include "Algo/Reverse.h"
 
 // Sets default values
 AEnemyPawn::AEnemyPawn(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -18,9 +20,6 @@ AEnemyPawn::AEnemyPawn(const FObjectInitializer& ObjectInitializer) : Super(Obje
 	{
 		ProjectileBlueprintClass = ProjectileBlueprintClassFinder.Object;
 	}
-	
-	EnemyRootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("EnemyRootComponent"));
-	SetRootComponent(EnemyRootComponent);
 
 	EnemyShipMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("EnemyShipMesh"));
 
@@ -31,14 +30,14 @@ AEnemyPawn::AEnemyPawn(const FObjectInitializer& ObjectInitializer) : Super(Obje
 		EnemyShipMesh->bOwnerNoSee = false;
 		EnemyShipMesh->bCastDynamicShadow = true;
 		EnemyShipMesh->bAffectDynamicIndirectLighting = true;
-		EnemyShipMesh->SetupAttachment(RootComponent);
+		SetRootComponent(EnemyShipMesh);
 	}
 
 	EnemySightComponent = CreateDefaultSubobject<UEnemySightComponent>(TEXT("EnemySightComponent"));
 
 	if (EnemySightComponent != nullptr)
 	{
-		EnemySightComponent->SetupAttachment(RootComponent);
+		EnemySightComponent->SetupAttachment(EnemyShipMesh);
 	}
 
 	AutoPossessPlayer = EAutoReceiveInput::Disabled;
@@ -65,6 +64,8 @@ void AEnemyPawn::BeginPlay()
 
 	EnemyController = Cast<AEnemyAIController>(Controller);
 	LastTimeWeShot = -100;
+
+	InitialiseNavigationManager();
 }
 
 // Called every frame
@@ -137,16 +138,43 @@ void AEnemyPawn::Tick(float DeltaTime)
 	}
 
 	// Otherwise, if we're not engaging and we're close enough, reset movement and notify controller.
-	else if(PawnTarget == nullptr && (currentLocation - _target).Size() < ProximityEpsilon)
+	else if (PawnTarget == nullptr && (currentLocation - _target).Size() < ProximityEpsilon)
 	{
-		_target = FVector::ZeroVector;
-		EnemyController->OnTargetReached();
+		if (PathSolutionWaypoints.Num() > 0)
+			_target = PathSolutionWaypoints.Pop();
+		else
+		{
+			_target = FVector::ZeroVector;
+			EnemyController->OnTargetReached();
+		}
 	}
 }
 
 void AEnemyPawn::MoveTo(FVector worldPosition)
 {
-	_target = worldPosition;
+	InitialiseNavigationManager();
+
+	// defaults will do
+	FDoNNavigationQueryParams queryParams; 
+	queryParams.bPreciseDynamicCollisionRepathing = true;
+	queryParams.bFlexibleOriginGoal = true;
+
+	// all the debugging
+	FDoNNavigationDebugParams debugParams;
+	debugParams.VisualizeInRealTime = debugParams.VisualizeOptimizedPath = debugParams.VisualizeRawPath = true;
+
+	FDoNNavigationResultHandler resultHandler;
+	resultHandler.BindDynamic(this, &AEnemyPawn::NavigationQuqeryHandler);
+
+	FDonNavigationDynamicCollisionDelegate collisionDelegate;
+	collisionDelegate.BindDynamic(this, &AEnemyPawn::DynamicNavigationQuqeryHandler);
+
+	if (!NavigationManager->SchedulePathfindingTask(this, worldPosition, queryParams, debugParams, resultHandler, collisionDelegate))
+	{
+		FTimerDelegate retryDelegate = FTimerDelegate::CreateUObject(this, &AEnemyPawn::MoveTo, worldPosition);
+		GetWorldTimerManager().SetTimer(PathRetryTimerHandle, retryDelegate, 5, false);
+	}
+
 	PawnTarget = nullptr;
 }
 
@@ -193,4 +221,31 @@ void AEnemyPawn::Shoot()
 		IProjectile::Execute_SetProjectileParent(projectile, this);
 		IProjectile::Execute_SetLinearVelocity(projectile, GetActorForwardVector() * 50000);
 	}
+}
+
+void AEnemyPawn::InitialiseNavigationManager()
+{
+	if (NavigationManager != nullptr)
+		return;
+
+	auto worldSettings = Cast<AGoingHomeWorldSettings>(GetWorld()->GetWorldSettings());
+
+	if (worldSettings != nullptr)
+		NavigationManager = worldSettings->DonNavigationManager;
+}
+
+void AEnemyPawn::NavigationQuqeryHandler(const FDoNNavigationQueryData& data)
+{
+	PathSolutionWaypoints = TArray<FVector>();
+	for (auto i = data.PathSolutionOptimized.Num() - 1; i >= 0; --i)
+	{
+		PathSolutionWaypoints.Push(data.PathSolutionOptimized[i]);
+	}
+
+	if (PathSolutionWaypoints.Num())
+		_target = PathSolutionWaypoints.Pop();
+}
+
+void AEnemyPawn::DynamicNavigationQuqeryHandler(const struct FDonNavigationDynamicCollisionPayload& data)
+{
 }

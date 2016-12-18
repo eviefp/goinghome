@@ -17,4 +17,8 @@ class GOINGHOME_API AGoingHomeWorldSettings : public AWorldSettings
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BeaconWidget")
 	TSubclassOf<class UUserWidget> BeaconWidget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Navigation")
+	class ADonNavigationManager* DonNavigationManager;
+
 };

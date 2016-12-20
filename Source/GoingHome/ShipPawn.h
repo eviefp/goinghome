@@ -29,9 +29,6 @@ protected:
 	//~=============================================================================
 	// Components
 
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	class UPhysicsThrusterComponent *PitchUp, *PitchDown, *YawLeft, *YawRight, *RollLeft, *RollRight;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Thrusters", meta = (AllowPrivateAccess = "true"))
 	float PitchForce;
 	

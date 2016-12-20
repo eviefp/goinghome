@@ -13,48 +13,35 @@ AShipPawn::AShipPawn(const FObjectInitializer& ObjectInitializer)
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = true;
+	PrimaryActorTick.TickInterval = 0;
+	PrimaryActorTick.bAllowTickOnDedicatedServer = true;
 
 	this->AutoPossessPlayer = EAutoReceiveInput::Player0;
 	this->AutoReceiveInput = EAutoReceiveInput::Player0;
+	this->SetActorTickEnabled(true);
+	this->SetTickGroup(ETickingGroup::TG_PrePhysics);
 
-	PitchUp = CreateDefaultSubobject<UPhysicsThrusterComponent>(TEXT("PitchUpThruster"));
-	PitchUp->SetupAttachment(ShipMesh);
-	PitchUp->AddLocalOffset(FVector(0, 0, 400));
-	PitchUp->AddLocalRotation(FRotator(0, 0, 90));
+	SetRootComponent(ShipMesh);
+	RootComponent = ShipMesh;
 
-	PitchDown = CreateDefaultSubobject<UPhysicsThrusterComponent>(TEXT("PitchDownThruster"));
-	PitchDown->SetupAttachment(ShipMesh);
-	PitchDown->AddLocalOffset(FVector(0, 0, -400));
-	PitchDown->AddLocalRotation(FRotator(0, 0, -90));
+	ShipRootComponent->DestroyComponent();
+	ShipRootComponent = ShipMesh;
 
-	YawLeft = CreateDefaultSubobject<UPhysicsThrusterComponent>(TEXT("YawLeftThruster"));
-	YawLeft->SetupAttachment(ShipMesh);
-	YawLeft->AddLocalOffset(FVector(0, 0, -400));
-	YawLeft->AddLocalRotation(FRotator(0, 0, 180));
-
-	YawRight = CreateDefaultSubobject<UPhysicsThrusterComponent>(TEXT("YawRightThruster"));
-	YawRight->SetupAttachment(ShipMesh);
-	YawRight->AddLocalOffset(FVector(0, 0, 400));
-
-	RollLeft = CreateDefaultSubobject<UPhysicsThrusterComponent>(TEXT("RollLeftThruster"));
-	RollLeft->SetupAttachment(ShipMesh);
-	RollLeft->AddLocalOffset(FVector(-400, 0, 0));
-	RollLeft->AddLocalRotation(FRotator(0, 0, 90));
-
-	RollRight = CreateDefaultSubobject<UPhysicsThrusterComponent>(TEXT("RollRightThruster"));
-	RollRight->SetupAttachment(ShipMesh);
-	RollRight->AddLocalOffset(FVector(400, 0, 0));
-	RollRight->AddLocalRotation(FRotator(0, 0, -90));
+	ShipMesh->SetSimulatePhysics(true);
+	ShipMesh->SetEnableGravity(false);
+	ShipMesh->SetLinearDamping(0.15);
+	ShipMesh->SetAngularDamping(0.4);
 
 	FirstPersonCameraArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("FirstPersonCameraArm"));
 	FirstPersonCameraArm->SetupAttachment(ShipMesh);
 	FirstPersonCameraArm->AddLocalOffset(FVector(0, -4.6f, -4.96f));
 	FirstPersonCameraArm->bEnableCameraLag = true;
 	FirstPersonCameraArm->bEnableCameraRotationLag = true;
-	FirstPersonCameraArm->TargetArmLength = 1;
+	FirstPersonCameraArm->TargetArmLength = 0;
 	FirstPersonCameraArm->CameraLagSpeed = 100;
 	FirstPersonCameraArm->CameraRotationLagSpeed = 5;
-	FirstPersonCameraArm->CameraLagMaxDistance = 4;
+	FirstPersonCameraArm->CameraLagMaxDistance = 5;
 
 	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	FirstPersonCamera->bAutoActivate = true;
@@ -62,8 +49,8 @@ AShipPawn::AShipPawn(const FObjectInitializer& ObjectInitializer)
 
 	ThirdPersonCameraArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("ThirdPersonCameraArm"));
 	ThirdPersonCameraArm->SetupAttachment(ShipMesh);
-	ThirdPersonCameraArm->AddLocalOffset(FVector(-300, 0, 300));
-	ThirdPersonCameraArm->AddLocalRotation(FRotator(0, 65, 0));
+	ThirdPersonCameraArm->AddLocalOffset(FVector(-1700, 0, 760));
+	ThirdPersonCameraArm->AddLocalRotation(FRotator(0, -10, 0));
 	ThirdPersonCameraArm->bEnableCameraLag = true;
 	ThirdPersonCameraArm->bEnableCameraRotationLag = true;
 	ThirdPersonCameraArm->TargetArmLength = 1;
@@ -75,6 +62,8 @@ AShipPawn::AShipPawn(const FObjectInitializer& ObjectInitializer)
 	ThirdPersonCamera->bAutoActivate = false;
 	ThirdPersonCamera->SetupAttachment(ThirdPersonCameraArm);
 
+	PitchForce = YawForce = RollForce = 1200;
+	ThrustForce = 2000;
 }
 
 void AShipPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -86,7 +75,7 @@ void AShipPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAxis("Roll", this, &AShipPawn::RollHandler);
 	PlayerInputComponent->BindAxis("Thrust", this, &AShipPawn::ThrustHandler);
 
-	PlayerInputComponent->BindAction("Camera", IE_Pressed, this, &AShipPawn::CycleCameras);
+	PlayerInputComponent->BindAction("CycleCamera", IE_Pressed, this, &AShipPawn::CycleCameras);
 
 
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -97,36 +86,21 @@ void AShipPawn::BeginPlay()
 	_gameState = Cast<AGoingHomeGameState>(GetWorld()->GetGameState());
 }
 
-void AShipPawn::ActivateThrusterPair(UPhysicsThrusterComponent* one, UPhysicsThrusterComponent* two, float value, float force)
-{
-	if (value == 0)
-	{
-		one->Deactivate();
-		two->Deactivate();
-		return;
-	}
-
-	one->ThrustStrength = two->ThrustStrength = value * force;
-
-	one->Activate();
-	two->Activate();
-}
-
 void AShipPawn::PitchHandler(float value)
 {
-	ActivateThrusterPair(PitchUp, PitchDown, value, PitchForce);
+	ShipMesh->AddAngularImpulse(ShipMesh->GetRightVector() * (PitchForce*value));
 	_gameState->OnPitch(value);
 }
 
 void AShipPawn::YawHandler(float value)
 {
-	ActivateThrusterPair(YawLeft, YawRight, value, YawForce);
+	ShipMesh->AddAngularImpulse(ShipMesh->GetUpVector() * (YawForce*value));
 	_gameState->OnYaw(value);
 }
 
 void AShipPawn::RollHandler(float value)
 {
-	ActivateThrusterPair(RollLeft, RollRight, value, RollForce);
+	ShipMesh->AddAngularImpulse(ShipMesh->GetForwardVector() * (RollForce*value));
 	_gameState->OnRoll(value);
 }
 

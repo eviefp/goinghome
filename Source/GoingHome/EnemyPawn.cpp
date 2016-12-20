@@ -9,35 +9,30 @@
 #include "Algo/Reverse.h"
 
 // Sets default values
-AEnemyPawn::AEnemyPawn(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+AEnemyPawn::AEnemyPawn(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
 {
 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	static ConstructorHelpers::FObjectFinder<UClass> ProjectileBlueprintClassFinder(TEXT("Class'/Game/Blueprints/BP_ShipProjectile.BP_ShipProjectile_C'"));
 
+	// Hack needed for the navigation system to work.
+	ShipMesh->RemoveFromRoot();
+	SetRootComponent(ShipMesh);
+
+	RootComponent = ShipRootComponent = ShipMesh;
+
 	if (ProjectileBlueprintClassFinder.Object != nullptr)
 	{
 		ProjectileBlueprintClass = ProjectileBlueprintClassFinder.Object;
-	}
-
-	EnemyShipMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("EnemyShipMesh"));
-
-	if (EnemyShipMesh != nullptr)
-	{
-		EnemyShipMesh->AlwaysLoadOnClient = true;
-		EnemyShipMesh->AlwaysLoadOnServer = true;
-		EnemyShipMesh->bOwnerNoSee = false;
-		EnemyShipMesh->bCastDynamicShadow = true;
-		EnemyShipMesh->bAffectDynamicIndirectLighting = true;
-		SetRootComponent(EnemyShipMesh);
 	}
 
 	EnemySightComponent = CreateDefaultSubobject<UEnemySightComponent>(TEXT("EnemySightComponent"));
 
 	if (EnemySightComponent != nullptr)
 	{
-		EnemySightComponent->SetupAttachment(EnemyShipMesh);
+		EnemySightComponent->SetupAttachment(ShipMesh);
 	}
 
 	AutoPossessPlayer = EAutoReceiveInput::Disabled;
@@ -58,8 +53,8 @@ void AEnemyPawn::BeginPlay()
 	Super::BeginPlay();
 
 	UE_LOG(GoingHomeEnemyPawn, Log, TEXT("Ctor: RootComponent = %s || EnemyShipMesh = %s "),
-		*RootComponent->GetComponentLocation().ToString(),
-		*EnemyShipMesh->GetComponentLocation().ToString()
+		*ShipRootComponent->GetComponentLocation().ToString(),
+		*ShipMesh->GetComponentLocation().ToString()
 	);
 
 	EnemyController = Cast<AEnemyAIController>(Controller);
@@ -98,7 +93,7 @@ void AEnemyPawn::Tick(float DeltaTime)
 	auto interpolatedRotation = FMath::RInterpConstantTo(FRotator::ZeroRotator, deltaRotation, DeltaTime, TurnSpeed);
 
 	// Interpolate the relative move vector
-	auto currentLocation = RootComponent->GetComponentLocation();
+	auto currentLocation = ShipRootComponent->GetComponentLocation();
 	auto deltaLocation = _target - currentLocation;
 	auto interpolatedMoveVector = FMath::VInterpConstantTo(FVector::ZeroVector, deltaLocation, DeltaTime, MaxSpeed);
 
@@ -128,7 +123,7 @@ void AEnemyPawn::Tick(float DeltaTime)
 		if (deltaLocation.Size() > GiveUpEngageIfDistanceIsGreaterThan)
 		{
 			UE_LOG(GoingHomeEnemyPawn, Log, TEXT("Giving up engage at Self %s || Target %s || Distance %f"),
-				*RootComponent->GetComponentLocation().ToString(),
+				*ShipRootComponent->GetComponentLocation().ToString(),
 				*_target.ToString(),
 				deltaLocation.Size()
 			);

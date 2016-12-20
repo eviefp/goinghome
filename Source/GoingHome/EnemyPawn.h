@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "GameFramework/Pawn.h"
+#include "PawnBase.h"
 #include "DonNavigationManager.h"
 #include "EnemyPawn.generated.h"
 
@@ -11,7 +11,7 @@
  * It takes MoveTo orders from EnemyAIController.
  */
 UCLASS()
-class GOINGHOME_API AEnemyPawn : public APawn
+class GOINGHOME_API AEnemyPawn : public APawnBase
 {
 	GENERATED_BODY()
 
@@ -29,12 +29,10 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 
 
+	// TODO: should probably make this protected and provide accessor const methods.
+public:
 	//~=============================================================================
 	// Visual Components
-
-	/** The ship mesh. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	class UStaticMeshComponent* EnemyShipMesh;
 
 	/** Sight component. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
@@ -75,6 +73,7 @@ public:
 	float RateOfFire;
 
 
+public:
 	//~=============================================================================
 	// Actions
 

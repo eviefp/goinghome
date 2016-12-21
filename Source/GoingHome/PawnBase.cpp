@@ -11,9 +11,6 @@ APawnBase::APawnBase(const FObjectInitializer& ObjectInitializer)
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	RootComponent = ShipRootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("ShipRootComponent"));
-	SetRootComponent(ShipRootComponent);
-
 	ShipMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ShipMesh"));
 
 	if (ShipMesh != nullptr)
@@ -24,14 +21,7 @@ APawnBase::APawnBase(const FObjectInitializer& ObjectInitializer)
 		ShipMesh->bCastDynamicShadow = true;
 		ShipMesh->bAffectDynamicIndirectLighting = true;
 		
-		if (ShipRootComponent != nullptr)
-		{
-			ShipMesh->SetupAttachment(ShipRootComponent);
-		}
-		else
-		{
-			SetRootComponent(ShipMesh);
-		}
+		SetRootComponent(ShipMesh);
 	}
 }
 

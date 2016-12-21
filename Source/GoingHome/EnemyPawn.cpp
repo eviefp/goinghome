@@ -17,12 +17,6 @@ AEnemyPawn::AEnemyPawn(const FObjectInitializer& ObjectInitializer)
 
 	static ConstructorHelpers::FObjectFinder<UClass> ProjectileBlueprintClassFinder(TEXT("Class'/Game/Blueprints/BP_ShipProjectile.BP_ShipProjectile_C'"));
 
-	// Hack needed for the navigation system to work.
-	ShipMesh->RemoveFromRoot();
-	SetRootComponent(ShipMesh);
-
-	RootComponent = ShipRootComponent = ShipMesh;
-
 	if (ProjectileBlueprintClassFinder.Object != nullptr)
 	{
 		ProjectileBlueprintClass = ProjectileBlueprintClassFinder.Object;
@@ -53,7 +47,7 @@ void AEnemyPawn::BeginPlay()
 	Super::BeginPlay();
 
 	UE_LOG(GoingHomeEnemyPawn, Log, TEXT("Ctor: RootComponent = %s || EnemyShipMesh = %s "),
-		*ShipRootComponent->GetComponentLocation().ToString(),
+		*ShipMesh->GetComponentLocation().ToString(),
 		*ShipMesh->GetComponentLocation().ToString()
 	);
 
@@ -93,7 +87,7 @@ void AEnemyPawn::Tick(float DeltaTime)
 	auto interpolatedRotation = FMath::RInterpConstantTo(FRotator::ZeroRotator, deltaRotation, DeltaTime, TurnSpeed);
 
 	// Interpolate the relative move vector
-	auto currentLocation = ShipRootComponent->GetComponentLocation();
+	auto currentLocation = ShipMesh->GetComponentLocation();
 	auto deltaLocation = _target - currentLocation;
 	auto interpolatedMoveVector = FMath::VInterpConstantTo(FVector::ZeroVector, deltaLocation, DeltaTime, MaxSpeed);
 
@@ -123,7 +117,7 @@ void AEnemyPawn::Tick(float DeltaTime)
 		if (deltaLocation.Size() > GiveUpEngageIfDistanceIsGreaterThan)
 		{
 			UE_LOG(GoingHomeEnemyPawn, Log, TEXT("Giving up engage at Self %s || Target %s || Distance %f"),
-				*ShipRootComponent->GetComponentLocation().ToString(),
+				*ShipMesh->GetComponentLocation().ToString(),
 				*_target.ToString(),
 				deltaLocation.Size()
 			);

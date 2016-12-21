@@ -13,20 +13,9 @@ AShipPawn::AShipPawn(const FObjectInitializer& ObjectInitializer)
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	PrimaryActorTick.bStartWithTickEnabled = true;
-	PrimaryActorTick.TickInterval = 0;
-	PrimaryActorTick.bAllowTickOnDedicatedServer = true;
 
 	this->AutoPossessPlayer = EAutoReceiveInput::Player0;
 	this->AutoReceiveInput = EAutoReceiveInput::Player0;
-	this->SetActorTickEnabled(true);
-	this->SetTickGroup(ETickingGroup::TG_PrePhysics);
-
-	SetRootComponent(ShipMesh);
-	RootComponent = ShipMesh;
-
-	ShipRootComponent->DestroyComponent();
-	ShipRootComponent = ShipMesh;
 
 	ShipMesh->SetSimulatePhysics(true);
 	ShipMesh->SetEnableGravity(false);
@@ -38,10 +27,13 @@ AShipPawn::AShipPawn(const FObjectInitializer& ObjectInitializer)
 	FirstPersonCameraArm->AddLocalOffset(FVector(0, -4.6f, -4.96f));
 	FirstPersonCameraArm->bEnableCameraLag = true;
 	FirstPersonCameraArm->bEnableCameraRotationLag = true;
-	FirstPersonCameraArm->TargetArmLength = 0;
-	FirstPersonCameraArm->CameraLagSpeed = 100;
-	FirstPersonCameraArm->CameraRotationLagSpeed = 5;
+	FirstPersonCameraArm->TargetArmLength = 1;
+	FirstPersonCameraArm->CameraLagSpeed = 10;
+	FirstPersonCameraArm->CameraRotationLagSpeed = 10;
 	FirstPersonCameraArm->CameraLagMaxDistance = 5;
+	FirstPersonCameraArm->bUsePawnControlRotation = true;
+	FirstPersonCameraArm->SetComponentTickEnabled(true);
+	FirstPersonCameraArm->PrimaryComponentTick.bCanEverTick = true;
 
 	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	FirstPersonCamera->bAutoActivate = true;

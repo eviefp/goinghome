@@ -5,7 +5,7 @@
 #include "Runtime/Engine/Classes/PhysicsEngine/PhysicsThrusterComponent.h"
 #include "Runtime/Engine/Classes/GameFramework/SpringArmComponent.h"
 #include "Runtime/Engine/Classes/Camera/CameraComponent.h"
-
+#include "Projectile.h"
 
 // Sets default values
 AShipPawn::AShipPawn(const FObjectInitializer& ObjectInitializer)
@@ -60,6 +60,7 @@ AShipPawn::AShipPawn(const FObjectInitializer& ObjectInitializer)
 
 	PitchForce = YawForce = RollForce = 1200;
 	ThrustForce = 2000;
+	ProjectileBaseSpeed = 10000;
 }
 
 void AShipPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -73,6 +74,7 @@ void AShipPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 	PlayerInputComponent->BindAction("CycleCamera", IE_Pressed, this, &AShipPawn::CycleCameras);
 
+	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &AShipPawn::ShootHandler);
 
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
@@ -80,6 +82,7 @@ void AShipPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 void AShipPawn::BeginPlay()
 {
 	Super::BeginPlay();
+	OnActorBeginOverlap.AddDynamic(this, &AShipPawn::OverlapHandler);
 	_gameState = Cast<AGoingHomeGameState>(GetWorld()->GetGameState());
 }
 
@@ -125,4 +128,33 @@ void AShipPawn::CycleCameras()
 
 	ThirdPersonCamera->Deactivate();
 	FirstPersonCamera->Activate();
+}
+
+void AShipPawn::ShootHandler()
+{
+	if (ProjectileClass == nullptr)
+		return;
+
+	// current transform
+	auto transform = GetActorTransform();
+
+	// should be in front so we don't get collisions
+	transform.SetLocation(transform.GetLocation() + GetActorForwardVector() * 100);
+
+	//Spawn
+	FActorSpawnParameters spawnParams;
+	spawnParams.Instigator = this;
+	spawnParams.Owner = this;
+
+	auto projectile = GetWorld()->SpawnActor<AActor>(ProjectileClass, transform, spawnParams);
+	if (projectile != nullptr)
+	{
+		IProjectile::Execute_SetProjectileParent(projectile, this);
+		IProjectile::Execute_SetLinearVelocity(projectile, GetActorForwardVector() * ProjectileBaseSpeed);
+	}
+}
+
+void AShipPawn::OverlapHandler(AActor* OverlappedActor, AActor* OtherActor)
+{
+	_gameState->OnOverlap(OtherActor->GetFName());
 }

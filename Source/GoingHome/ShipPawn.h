@@ -55,6 +55,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* ThirdPersonCamera;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapons", meta = (AllowPrivateAccess = "true"))
+	float ProjectileBaseSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons", meta = (AllowPrivateAccess = "true", MustImplement = "Projectile"))
+	TSubclassOf<class AActor> ProjectileClass;
+
 private:
 	//~=============================================================================
 	// Keyboard handlers
@@ -64,6 +70,12 @@ private:
 	void RollHandler(float value);
 	void ThrustHandler(float value);
 	void CycleCameras();
+	void ShootHandler();
 
+public:
+	UFUNCTION()
+	void OverlapHandler(class AActor* OverlappedActor, class AActor* OtherActor);
+
+private:
 	void ActivateThrusterPair(UPhysicsThrusterComponent* one, UPhysicsThrusterComponent* two, float value, float force);
 };

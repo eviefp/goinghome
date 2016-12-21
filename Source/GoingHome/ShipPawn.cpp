@@ -13,6 +13,7 @@ AShipPawn::AShipPawn(const FObjectInitializer& ObjectInitializer)
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bAllowTickOnDedicatedServer = true;
 
 	this->AutoPossessPlayer = EAutoReceiveInput::Player0;
 	this->AutoReceiveInput = EAutoReceiveInput::Player0;
@@ -27,13 +28,13 @@ AShipPawn::AShipPawn(const FObjectInitializer& ObjectInitializer)
 	FirstPersonCameraArm->AddLocalOffset(FVector(0, -4.6f, -4.96f));
 	FirstPersonCameraArm->bEnableCameraLag = true;
 	FirstPersonCameraArm->bEnableCameraRotationLag = true;
-	FirstPersonCameraArm->TargetArmLength = 1;
-	FirstPersonCameraArm->CameraLagSpeed = 10;
-	FirstPersonCameraArm->CameraRotationLagSpeed = 10;
-	FirstPersonCameraArm->CameraLagMaxDistance = 5;
+	FirstPersonCameraArm->TargetArmLength = 0;
+	FirstPersonCameraArm->CameraLagSpeed = 50;
+	FirstPersonCameraArm->CameraRotationLagSpeed = 5;
+	FirstPersonCameraArm->CameraLagMaxDistance = 1;
 	FirstPersonCameraArm->bUsePawnControlRotation = true;
-	FirstPersonCameraArm->SetComponentTickEnabled(true);
-	FirstPersonCameraArm->PrimaryComponentTick.bCanEverTick = true;
+	FirstPersonCameraArm->bDoCollisionTest = false;
+	FirstPersonCameraArm->bUsePawnControlRotation = false;
 
 	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	FirstPersonCamera->bAutoActivate = true;
@@ -41,14 +42,17 @@ AShipPawn::AShipPawn(const FObjectInitializer& ObjectInitializer)
 
 	ThirdPersonCameraArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("ThirdPersonCameraArm"));
 	ThirdPersonCameraArm->SetupAttachment(ShipMesh);
-	ThirdPersonCameraArm->AddLocalOffset(FVector(-1700, 0, 760));
-	ThirdPersonCameraArm->AddLocalRotation(FRotator(0, -10, 0));
+	ThirdPersonCameraArm->AddLocalOffset(FVector(-500, 0, 0));
+	ThirdPersonCameraArm->AddLocalRotation(FRotator(0, -20, 0));
 	ThirdPersonCameraArm->bEnableCameraLag = true;
 	ThirdPersonCameraArm->bEnableCameraRotationLag = true;
-	ThirdPersonCameraArm->TargetArmLength = 1;
-	ThirdPersonCameraArm->CameraLagSpeed = 100;
+	ThirdPersonCameraArm->TargetArmLength = 500;
+	ThirdPersonCameraArm->CameraLagSpeed = 50;
 	ThirdPersonCameraArm->CameraRotationLagSpeed = 5;
-	ThirdPersonCameraArm->CameraLagMaxDistance = 4;
+	ThirdPersonCameraArm->CameraLagMaxDistance = 1;
+	ThirdPersonCameraArm->bUsePawnControlRotation = true;
+	ThirdPersonCameraArm->bDoCollisionTest = true;
+	ThirdPersonCameraArm->bUsePawnControlRotation = false;
 
 	ThirdPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("ThirdPersonCamera"));
 	ThirdPersonCamera->bAutoActivate = false;
@@ -75,7 +79,13 @@ void AShipPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 void AShipPawn::BeginPlay()
 {
+	Super::BeginPlay();
 	_gameState = Cast<AGoingHomeGameState>(GetWorld()->GetGameState());
+}
+
+void AShipPawn::Tick(float delta)
+{
+	Super::Tick(delta);
 }
 
 void AShipPawn::PitchHandler(float value)

@@ -2,10 +2,13 @@
 
 #include "GoingHome.h"
 #include "ShipPawn.h"
+#include "GoingHomeWorldSettings.h"
 #include "Runtime/Engine/Classes/PhysicsEngine/PhysicsThrusterComponent.h"
 #include "Runtime/Engine/Classes/GameFramework/SpringArmComponent.h"
 #include "Runtime/Engine/Classes/Camera/CameraComponent.h"
+#include "UMG.h"
 #include "Projectile.h"
+#include "Mineable.h"
 
 // Sets default values
 AShipPawn::AShipPawn(const FObjectInitializer& ObjectInitializer)
@@ -22,6 +25,7 @@ AShipPawn::AShipPawn(const FObjectInitializer& ObjectInitializer)
 	ShipMesh->SetEnableGravity(false);
 	ShipMesh->SetLinearDamping(0.15);
 	ShipMesh->SetAngularDamping(0.4);
+	ShipMesh->bGenerateOverlapEvents = true;
 
 	FirstPersonCameraArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("FirstPersonCameraArm"));
 	FirstPersonCameraArm->SetupAttachment(ShipMesh);
@@ -71,9 +75,9 @@ void AShipPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAxis("Yaw", this, &AShipPawn::YawHandler);
 	PlayerInputComponent->BindAxis("Roll", this, &AShipPawn::RollHandler);
 	PlayerInputComponent->BindAxis("Thrust", this, &AShipPawn::ThrustHandler);
+	PlayerInputComponent->BindAxis("Mine", this, &AShipPawn::MineHandler);
 
 	PlayerInputComponent->BindAction("CycleCamera", IE_Pressed, this, &AShipPawn::CycleCameras);
-
 	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &AShipPawn::ShootHandler);
 
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -82,8 +86,27 @@ void AShipPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 void AShipPawn::BeginPlay()
 {
 	Super::BeginPlay();
-	OnActorBeginOverlap.AddDynamic(this, &AShipPawn::OverlapHandler);
+
+	ShipMesh->OnComponentBeginOverlap.AddDynamic(this, &AShipPawn::OverlapHandler);
+
 	_gameState = Cast<AGoingHomeGameState>(GetWorld()->GetGameState());
+
+	// todo: create and move to player controller
+	auto worldSettings = Cast<AGoingHomeWorldSettings>(GetWorld()->GetWorldSettings());
+
+	if (worldSettings != nullptr)
+	{
+		auto hudWidget = worldSettings->MainPlayerHUD;
+		if (hudWidget != nullptr)
+		{
+			//auto widget = CreateWidget<UUserWidget>()
+			
+		/*	if (widget)
+			{
+				widget->AddToViewport();
+			}*/
+		}
+	}
 }
 
 void AShipPawn::Tick(float delta)
@@ -154,7 +177,28 @@ void AShipPawn::ShootHandler()
 	}
 }
 
-void AShipPawn::OverlapHandler(AActor* OverlappedActor, AActor* OtherActor)
+void AShipPawn::OverlapHandler(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	_gameState->OnOverlap(OtherActor->GetFName());
+}
+
+void AShipPawn::MineHandler(float value)
+{
+	if (value <= 0)
+		return;
+
+	FHitResult result;
+	FCollisionQueryParams queryParams;
+
+	queryParams.AddIgnoredActor(this);
+	queryParams.bTraceComplex = false;
+	
+	if (GetWorld()->LineTraceSingleByChannel(result, GetActorLocation(), GetActorLocation() + GetActorForwardVector() * 10000, ECollisionChannel::ECC_Visibility, queryParams))
+	{
+		if (result.GetActor()->GetClass()->ImplementsInterface(UMineable::StaticClass()))
+		{
+			_gameState->OnMine(result.GetActor()->GetFName());
+			GEngine->AddOnScreenDebugMessage(-1, 1.5, FColor::White, "TODO: mining code");
+		}
+	}
 }

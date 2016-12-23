@@ -72,11 +72,13 @@ private:
 	void CycleCameras();
 	void ShootHandler();
 	void MineHandler(float value);
+	void ToggleMouseLookOn();
+	void ToggleMouseLookOff();
+
+	bool MouseLookEnabled;
+	class UCameraComponent* CurrentCamera;
 
 public:
 	UFUNCTION()
 	void OverlapHandler(class UPrimitiveComponent* OverlappedComponent, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
-
-private:
-	void ActivateThrusterPair(UPhysicsThrusterComponent* one, UPhysicsThrusterComponent* two, float value, float force);
 };

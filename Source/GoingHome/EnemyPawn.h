@@ -124,6 +124,8 @@ private:
 
 	struct FTimerHandle PathRetryTimerHandle;
 
+	struct FTimerHandle EngagePlayerTimerHandle;
+
 	TArray<FVector> PathSolutionWaypoints;
 
 	void InitialiseNavigationManager();

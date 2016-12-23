@@ -62,24 +62,9 @@ void AEnemyPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// If we're engaging, set the target to the enemy's current location.
-	if (PawnTarget != nullptr)
-		_target = PawnTarget->GetActorLocation();
-
 	// If target is 0, 0, 0 do nothing. This means we have a bug that we can't ever move to origin, exactly.
 	if (_target == FVector::ZeroVector)
 		return;
-
-	// Target location debug point.
-	//DrawDebugSphere(
-	//	GetWorld(),
-	//	_target,
-	//	50,
-	//	32,
-	//	FColor(255, 0, 0),
-	//	false,
-	//	0.1
-	//);
 
 	// Make a rotation from the distance vector, get the delta rotation and interpolate it
 	auto newRotation = FRotationMatrix::MakeFromX(_target - GetActorLocation()).Rotator();
@@ -98,16 +83,6 @@ void AEnemyPawn::Tick(float DeltaTime)
 		AddActorWorldOffset(interpolatedMoveVector, false);
 	}
 
-	// Forward vector debug line.
-	//DrawDebugLine(
-	//	GetWorld(),
-	//	RootComponent->GetComponentLocation(),
-	//	RootComponent->GetComponentLocation() + RootComponent->GetForwardVector() * 3000,
-	//	FColor(0, 255, 0),
-	//	false, 0.1, 0,
-	//	30
-	//);
-
 	// If we are currently engaging a target, give up if distance is too big.
 	if (PawnTarget != nullptr)
 	{
@@ -123,18 +98,21 @@ void AEnemyPawn::Tick(float DeltaTime)
 			);
 
 			EnemyController->OnGiveUpEngage();
+			GetWorldTimerManager().ClearTimer(EngagePlayerTimerHandle);
 		}
 	}
 
 	// Otherwise, if we're not engaging and we're close enough, reset movement and notify controller.
-	else if (PawnTarget == nullptr && (currentLocation - _target).Size() < ProximityEpsilon)
+	if ((currentLocation - _target).Size() < ProximityEpsilon)
 	{
 		if (PathSolutionWaypoints.Num() > 0)
 			_target = PathSolutionWaypoints.Pop();
 		else
 		{
 			_target = FVector::ZeroVector;
-			EnemyController->OnTargetReached();
+
+			if (PawnTarget != nullptr)
+				EnemyController->OnTargetReached();
 		}
 	}
 }
@@ -169,7 +147,15 @@ void AEnemyPawn::MoveTo(FVector worldPosition)
 
 void AEnemyPawn::EngagePawn(APawn* Player)
 {
+	InitialiseNavigationManager();
+
+	MoveTo(Player->GetActorLocation());
+
 	PawnTarget = Player;
+
+	FTimerDelegate timerDelegate(FTimerDelegate::CreateUObject(this, &AEnemyPawn::EngagePawn, Player));
+	
+	GetWorldTimerManager().SetTimer(EngagePlayerTimerHandle, timerDelegate, 1, false);
 }
 
 float AEnemyPawn::TakeDamage(float DamageAmount, FDamageEvent const & DamageEvent, AController * EventInstigator, AActor * DamageCauser)
@@ -235,6 +221,6 @@ void AEnemyPawn::NavigationQuqeryHandler(const FDoNNavigationQueryData& data)
 		_target = PathSolutionWaypoints.Pop();
 }
 
-void AEnemyPawn::DynamicNavigationQuqeryHandler(const struct FDonNavigationDynamicCollisionPayload& data)
+void AEnemyPawn::DynamicNavigationQuqeryHandler(const FDonNavigationDynamicCollisionPayload& data)
 {
 }

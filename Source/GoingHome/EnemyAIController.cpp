@@ -23,6 +23,9 @@ void AEnemyAIController::OnTargetReached()
 	if (EnemyPawn->Waypoints.Num() <= 0) 
 	{
 		UE_LOG(GoingHomeEnemyAIController, Log, TEXT("No Waypoints found. Doing nothing."));
+
+		EnemyPawn->EngagePawn(GetWorld()->GetFirstPlayerController()->GetPawn());
+
 		return;
 	}
 

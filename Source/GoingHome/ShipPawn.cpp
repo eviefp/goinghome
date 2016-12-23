@@ -2,11 +2,8 @@
 
 #include "GoingHome.h"
 #include "ShipPawn.h"
-#include "GoingHomeWorldSettings.h"
-#include "Runtime/Engine/Classes/PhysicsEngine/PhysicsThrusterComponent.h"
 #include "Runtime/Engine/Classes/GameFramework/SpringArmComponent.h"
 #include "Runtime/Engine/Classes/Camera/CameraComponent.h"
-#include "UMG.h"
 #include "Projectile.h"
 #include "Mineable.h"
 
@@ -65,6 +62,8 @@ AShipPawn::AShipPawn(const FObjectInitializer& ObjectInitializer)
 	PitchForce = YawForce = RollForce = 1200;
 	ThrustForce = 2000;
 	ProjectileBaseSpeed = 10000;
+	MouseLookEnabled = false;
+	CurrentCamera = FirstPersonCamera;
 }
 
 void AShipPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -80,6 +79,9 @@ void AShipPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction("CycleCamera", IE_Pressed, this, &AShipPawn::CycleCameras);
 	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &AShipPawn::ShootHandler);
 
+	PlayerInputComponent->BindAction("MouseLook", IE_Pressed, this, &AShipPawn::ToggleMouseLookOn);
+	PlayerInputComponent->BindAction("MouseLook", IE_Released, this, &AShipPawn::ToggleMouseLookOff);
+
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
@@ -90,44 +92,49 @@ void AShipPawn::BeginPlay()
 	ShipMesh->OnComponentBeginOverlap.AddDynamic(this, &AShipPawn::OverlapHandler);
 
 	_gameState = Cast<AGoingHomeGameState>(GetWorld()->GetGameState());
-
-	// todo: create and move to player controller
-	auto worldSettings = Cast<AGoingHomeWorldSettings>(GetWorld()->GetWorldSettings());
-
-	if (worldSettings != nullptr)
-	{
-		auto hudWidget = worldSettings->MainPlayerHUD;
-		if (hudWidget != nullptr)
-		{
-			//auto widget = CreateWidget<UUserWidget>()
-			
-		/*	if (widget)
-			{
-				widget->AddToViewport();
-			}*/
-		}
-	}
 }
 
 void AShipPawn::Tick(float delta)
 {
 	Super::Tick(delta);
+
+	if (!MouseLookEnabled && !CurrentCamera->RelativeRotation.IsZero())
+	{
+		CurrentCamera->SetRelativeRotation(FMath::Lerp(CurrentCamera->RelativeRotation, FRotator(0, 0, 0), 0.05f));
+	}
 }
 
 void AShipPawn::PitchHandler(float value)
 {
+	if (MouseLookEnabled)
+	{
+		CurrentCamera->AddRelativeRotation(FRotator(-value, 0, 0));
+		return;
+	}
+
 	ShipMesh->AddAngularImpulse(ShipMesh->GetRightVector() * (PitchForce*value));
 	_gameState->OnPitch(value);
 }
 
 void AShipPawn::YawHandler(float value)
 {
+	if (MouseLookEnabled)
+	{
+		CurrentCamera->AddRelativeRotation(FRotator(0, value, 0));
+		return;
+	}
+
 	ShipMesh->AddAngularImpulse(ShipMesh->GetUpVector() * (YawForce*value));
 	_gameState->OnYaw(value);
 }
 
 void AShipPawn::RollHandler(float value)
 {
+	if (MouseLookEnabled)
+	{
+		return;
+	}
+
 	ShipMesh->AddAngularImpulse(ShipMesh->GetForwardVector() * (RollForce*value));
 	_gameState->OnRoll(value);
 }
@@ -146,11 +153,13 @@ void AShipPawn::CycleCameras()
 	{
 		FirstPersonCamera->Deactivate();
 		ThirdPersonCamera->Activate();
+		CurrentCamera = ThirdPersonCamera;
 		return;
 	}
 
 	ThirdPersonCamera->Deactivate();
 	FirstPersonCamera->Activate();
+	CurrentCamera = FirstPersonCamera;
 }
 
 void AShipPawn::ShootHandler()
@@ -201,4 +210,14 @@ void AShipPawn::MineHandler(float value)
 			GEngine->AddOnScreenDebugMessage(-1, 1.5, FColor::White, "TODO: mining code");
 		}
 	}
+}
+
+void AShipPawn::ToggleMouseLookOn()
+{
+	MouseLookEnabled = true;
+}
+
+void AShipPawn::ToggleMouseLookOff()
+{
+	MouseLookEnabled = false;
 }

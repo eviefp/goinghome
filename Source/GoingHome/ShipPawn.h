@@ -61,6 +61,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons", meta = (AllowPrivateAccess = "true", MustImplement = "Projectile"))
 	TSubclassOf<class AActor> ProjectileClass;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HUD", meta = (AllowPrivateAccess = "true"))
+	class ARadar* Radar;
+
 private:
 	//~=============================================================================
 	// Keyboard handlers

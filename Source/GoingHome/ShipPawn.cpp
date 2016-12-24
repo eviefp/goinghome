@@ -6,6 +6,7 @@
 #include "Runtime/Engine/Classes/Camera/CameraComponent.h"
 #include "Projectile.h"
 #include "Mineable.h"
+#include "Radar.h"
 
 // Sets default values
 AShipPawn::AShipPawn(const FObjectInitializer& ObjectInitializer)
@@ -88,6 +89,10 @@ void AShipPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 void AShipPawn::BeginPlay()
 {
 	Super::BeginPlay();
+
+	Radar = GetWorld()->SpawnActor<ARadar>(ARadar::StaticClass(), FVector(27.971394f, -33.01358f, -6.736207f), FRotator());
+	Radar->SetActorScale3D(FVector(0.1f, 0.1f, 0.1f));
+	Radar->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
 
 	ShipMesh->OnComponentBeginOverlap.AddDynamic(this, &AShipPawn::OverlapHandler);
 
@@ -182,7 +187,7 @@ void AShipPawn::ShootHandler()
 	if (projectile != nullptr)
 	{
 		IProjectile::Execute_SetProjectileParent(projectile, this);
-		IProjectile::Execute_SetLinearVelocity(projectile, GetActorForwardVector() * ProjectileBaseSpeed);
+		IProjectile::Execute_SetLinearVelocity(projectile, CurrentCamera->GetForwardVector() * ProjectileBaseSpeed);
 	}
 }
 

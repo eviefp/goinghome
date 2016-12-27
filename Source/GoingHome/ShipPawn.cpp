@@ -90,7 +90,7 @@ void AShipPawn::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Radar = GetWorld()->SpawnActor<ARadar>(ARadar::StaticClass(), FVector(27.971394f, -33.01358f, -6.736207f), FRotator());
+	Radar = GetWorld()->SpawnActor<ARadar>(ARadar::StaticClass(), FVector(27.971394f, -33.01358f, -6.736207f), FRotator(0.0f, 0.0f, 0.0f));
 	Radar->SetActorScale3D(FVector(0.1f, 0.1f, 0.1f));
 	Radar->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
 

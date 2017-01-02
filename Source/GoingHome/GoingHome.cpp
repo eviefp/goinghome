@@ -10,3 +10,4 @@ DEFINE_LOG_CATEGORY(GoingHomeEnemyPawn);
 DEFINE_LOG_CATEGORY(GoingHomeEnemyAIController);
 DEFINE_LOG_CATEGORY(GoingHomeEnemySightComponent);
 DEFINE_LOG_CATEGORY(GoingHomeQuestSystem);
+DEFINE_LOG_CATEGORY(GoingHomeRadar);

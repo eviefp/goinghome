@@ -43,26 +43,26 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Thrusters", meta = (AllowPrivateAccess = "true"))
 	float ThrustForce;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cameras", meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* FirstPersonCameraArm;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cameras", meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FirstPersonCamera;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cameras", meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* ThirdPersonCameraArm;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cameras", meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* ThirdPersonCamera;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapons", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons", meta = (AllowPrivateAccess = "true"))
 	float ProjectileBaseSpeed;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapons", meta = (AllowPrivateAccess = "true", MustImplement = "Projectile"))
 	TSubclassOf<class AActor> ProjectileClass;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "HUD", meta = (AllowPrivateAccess = "true"))
-	class ARadar* Radar;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HUD", meta = (AllowPrivateAccess = "true"))
+	class URadarComponent* RadarComponent;
 
 private:
 	//~=============================================================================

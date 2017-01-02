@@ -23,7 +23,7 @@ protected:
 	// Visual Components
 
 	/** The ship mesh and root component. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent* ShipMesh;
 
 };

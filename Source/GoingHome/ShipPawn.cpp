@@ -6,13 +6,13 @@
 #include "Runtime/Engine/Classes/Camera/CameraComponent.h"
 #include "Projectile.h"
 #include "Mineable.h"
-#include "Radar.h"
+#include "RadarComponent.h"
 
 // Sets default values
 AShipPawn::AShipPawn(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
- 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bAllowTickOnDedicatedServer = true;
 
@@ -27,7 +27,7 @@ AShipPawn::AShipPawn(const FObjectInitializer& ObjectInitializer)
 
 	FirstPersonCameraArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("FirstPersonCameraArm"));
 	FirstPersonCameraArm->SetupAttachment(ShipMesh);
-	FirstPersonCameraArm->AddLocalOffset(FVector(0, -4.6f, -4.96f));
+	FirstPersonCameraArm->AddLocalOffset(FVector(-4.0f, -32.6f, 1.04f));
 	FirstPersonCameraArm->bEnableCameraLag = true;
 	FirstPersonCameraArm->bEnableCameraRotationLag = true;
 	FirstPersonCameraArm->TargetArmLength = 0;
@@ -60,11 +60,18 @@ AShipPawn::AShipPawn(const FObjectInitializer& ObjectInitializer)
 	ThirdPersonCamera->bAutoActivate = false;
 	ThirdPersonCamera->SetupAttachment(ThirdPersonCameraArm);
 
-	PitchForce = YawForce = RollForce = 1200;
+	RadarComponent = CreateDefaultSubobject<URadarComponent>(TEXT("RadarComponent"));
+	RadarComponent->SetupAttachment(ShipMesh);
+	RadarComponent->SetRelativeLocation(FVector(26.0f, -33.01358f, -8.8f));
+
+	PitchForce = YawForce = 1200;
+	RollForce = 2400;
 	ThrustForce = 2000;
 	ProjectileBaseSpeed = 10000;
 	MouseLookEnabled = false;
 	CurrentCamera = FirstPersonCamera;
+
+	RootComponent->SetWorldScale3D(FVector(0.5f, 0.5f, 0.5f));
 }
 
 void AShipPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -89,10 +96,6 @@ void AShipPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 void AShipPawn::BeginPlay()
 {
 	Super::BeginPlay();
-
-	Radar = GetWorld()->SpawnActor<ARadar>(ARadar::StaticClass(), FVector(27.971394f, -33.01358f, -6.736207f), FRotator(0.0f, 0.0f, 0.0f));
-	Radar->SetActorScale3D(FVector(0.1f, 0.1f, 0.1f));
-	Radar->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
 
 	ShipMesh->OnComponentBeginOverlap.AddDynamic(this, &AShipPawn::OverlapHandler);
 

@@ -11,3 +11,4 @@ DECLARE_LOG_CATEGORY_EXTERN(GoingHomeEnemyPawn, Log, All);
 DECLARE_LOG_CATEGORY_EXTERN(GoingHomeEnemyAIController, Log, All);
 DECLARE_LOG_CATEGORY_EXTERN(GoingHomeEnemySightComponent, Log, All);
 DECLARE_LOG_CATEGORY_EXTERN(GoingHomeQuestSystem, Log, All);
+DECLARE_LOG_CATEGORY_EXTERN(GoingHomeRadar, Log, All);

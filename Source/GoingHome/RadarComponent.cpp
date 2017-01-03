@@ -4,6 +4,7 @@
 #include "RadarComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
+#include "Runtime/UMG/Public/Blueprint/UserWidget.h"
 
 FName URadarComponent::RadarMaterialName(TEXT("RadarMaterial"));
 
@@ -25,7 +26,9 @@ URadarComponent::URadarComponent(const FObjectInitializer& ObjectInitializer)
 	UIComponent->SetupAttachment(this);
 	UIComponent->SetDrawSize(FVector2D(200.0f, 200.0f));
 	UIComponent->SetRelativeRotation(FRotator(90, 0, 0));
-	UIComponent->SetWidgetClass(RadarWidgetClass);
+
+	if(RadarWidgetClass != nullptr) 
+		UIComponent->SetWidgetClass(RadarWidgetClass);
 }
 
 void URadarComponent::BeginPlay()
@@ -44,45 +47,43 @@ void URadarComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 
 	auto distanceFactor = Bounds.GetSphere().W / DetectionSphere->GetScaledSphereRadius();
 
-	DrawDebugSphere(
-		GetWorld(),
-		GetOwner()->GetActorLocation(),
-		DetectionSphere->GetScaledSphereRadius(),
-		16,
-		FColor::Blue,
-		false,
-		1.0f,
-		0,
-		1.0f
-	);
-
-	UE_LOG(GoingHomeRadar, Log, TEXT("Distance factor is %f"), distanceFactor);
+	//DrawDebugSphere(
+	//	GetWorld(),
+	//	GetOwner()->GetActorLocation(),
+	//	DetectionSphere->GetScaledSphereRadius(),
+	//	16,
+	//	FColor::Blue,
+	//	false,
+	//	1.0f,
+	//	0,
+	//	1.0f
+	//);
 
 	for (auto otherActor : OverlappingActors)
 	{
 		auto distance = otherActor.Key->GetActorLocation() - GetOwner()->GetActorLocation();
 
-		DrawDebugLine(
-			GetWorld(),
-			GetOwner()->GetActorLocation(),
-			GetOwner()->GetActorLocation() + distance,
-			FColor::Blue,
-			false,
-			1.0f,
-			0,
-			1.0f
-		);
+		//DrawDebugLine(
+		//	GetWorld(),
+		//	GetOwner()->GetActorLocation(),
+		//	GetOwner()->GetActorLocation() + distance,
+		//	FColor::Blue,
+		//	false,
+		//	1.0f,
+		//	0,
+		//	1.0f
+		//);
 
-		DrawDebugLine(
-			GetWorld(),
-			GetOwner()->GetActorLocation(),
-			GetOwner()->GetActorLocation() + (distance * distanceFactor * 10),
-			FColor::Red,
-			false,
-			1.0f,
-			0,
-			1.0f
-		);
+		//DrawDebugLine(
+		//	GetWorld(),
+		//	GetOwner()->GetActorLocation(),
+		//	GetOwner()->GetActorLocation() + (distance * distanceFactor * 10),
+		//	FColor::Red,
+		//	false,
+		//	1.0f,
+		//	0,
+		//	1.0f
+		//);
 
 		otherActor.Value->SetRelativeLocation(distance * distanceFactor, false);
 	}
@@ -90,10 +91,15 @@ void URadarComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 
 void URadarComponent::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
+	if (OverlappingActors.Find(OtherActor) != nullptr)
+		return;
+
 	FString name = "RadarComponentItem-";
 	name += OtherActor->GetFName().ToString();
 
-	auto radarItem = ConstructObject<UStaticMeshComponent>(UStaticMeshComponent::StaticClass(), GetOwner(), FName(*name));
+	//ConstructObject<UStaticMeshComponent>(UStaticMeshComponent::StaticClass(), GetOwner(), FName(*name));
+	auto radarItem = NewObject<UStaticMeshComponent>(GetOwner()); 
+	
 	radarItem->SetCollisionProfileName("NoCollision");
 	radarItem->OnComponentCreated();
 	radarItem->SetStaticMesh(RadarEntityMesh);
@@ -101,7 +107,7 @@ void URadarComponent::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, A
 	
 	radarItem->RegisterComponent();
 
-	radarItem->AttachTo(DetectionSphere);
+	radarItem->AttachToComponent(DetectionSphere, FAttachmentTransformRules::KeepRelativeTransform);
 
 	OverlappingActors.Add(OtherActor, radarItem);
 
@@ -111,7 +117,12 @@ void URadarComponent::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, A
 void URadarComponent::OnEndOverlap(class UPrimitiveComponent* OverlappedComponent, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	UE_LOG(GoingHomeRadar, Log, TEXT("Removing %s from radar."), *OtherActor->GetName());
-	auto radarItem = *OverlappingActors.Find(OtherActor);
+	auto radarItemResult = OverlappingActors.Find(OtherActor);
+
+	if (radarItemResult == nullptr)
+		return;
+
+	auto radarItem = *radarItemResult;
 	
 	radarItem->DestroyComponent(false);
 

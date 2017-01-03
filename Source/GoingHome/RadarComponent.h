@@ -29,9 +29,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Radar")
 	class UStaticMesh* RadarEntityMesh;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Radar")
+	class UWidgetComponent* UIComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Radar")
+	TSubclassOf<class UUserWidget> RadarWidgetClass;
 
 private:
 	TMap<AActor*, class UStaticMeshComponent*> OverlappingActors;
+
+	
 
 	UFUNCTION()
 	void OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);

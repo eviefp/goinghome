@@ -3,6 +3,7 @@
 #include "GoingHome.h"
 #include "RadarComponent.h"
 #include "Components/SphereComponent.h"
+#include "Components/WidgetComponent.h"
 
 FName URadarComponent::RadarMaterialName(TEXT("RadarMaterial"));
 
@@ -17,8 +18,14 @@ URadarComponent::URadarComponent(const FObjectInitializer& ObjectInitializer)
 
 	DetectionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("DetectionSphere"));
 	DetectionSphere->SetupAttachment(this);
-	DetectionSphere->InitSphereRadius(1000.0f);
+	DetectionSphere->InitSphereRadius(2000.0f);
 	DetectionSphere->SetRelativeScale3D(FVector(100.0f, 100.0f, 100.0f));
+
+	UIComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("UIComponent"));
+	UIComponent->SetupAttachment(this);
+	UIComponent->SetDrawSize(FVector2D(200.0f, 200.0f));
+	UIComponent->SetRelativeRotation(FRotator(90, 0, 0));
+	UIComponent->SetWidgetClass(RadarWidgetClass);
 }
 
 void URadarComponent::BeginPlay()

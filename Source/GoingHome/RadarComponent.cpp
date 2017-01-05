@@ -61,7 +61,7 @@ void URadarComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 
 	for (auto otherActor : OverlappingActors)
 	{
-		auto distance = otherActor.Key->GetActorLocation() - GetOwner()->GetActorLocation();
+		auto distance = otherActor.Key->GetActorLocation() - Bounds.GetSphere().Center;
 
 		//DrawDebugLine(
 		//	GetWorld(),
